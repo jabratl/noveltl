@@ -2,10 +2,6 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Novel Translator</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1f5fd1">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -49,12 +45,13 @@ small{color:var(--mut)}
 .iss{border-top:1px solid var(--line);padding:10px 0}.iss:first-child{border-top:0}
 .diff{font-size:13px;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;margin:6px 0}
 del{background:var(--dl);color:var(--dlk)}ins{background:var(--il);color:var(--ilk);text-decoration:none}
+.tag.bad{color:var(--bad)}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 </style></head><body>
 <header><h1>Novel Translator</h1>
 <div class="nvb"><select id="nov" title="Each novel has its own chapters and glossary"></select><button class="g" id="nnew">New novel</button><button class="g" id="nren">Rename</button><button class="g x" id="ndel">Delete</button><span style="flex:1"></span><button class="g" id="undo">Undo</button></div>
 <div id="st">Ready.</div>
-<nav id="tabs"><button data-t="setup" class="on">Setup</button><button data-t="chapters">Chapters</button><button data-t="glossary">Glossary</button><button data-t="audit">Audit and fix</button><button data-t="read">Read and edit</button></nav></header>
+<nav id="tabs"><button data-t="setup" class="on">Setup</button><button data-t="chapters">Chapters</button><button data-t="glossary">Glossary</button><button data-t="audit">Audit and fix</button><button data-t="match">Match check</button><button data-t="read">Read and edit</button></nav></header>
 <main>
 
 <section id="t-setup" class="on">
@@ -135,6 +132,16 @@ del{background:var(--dl);color:var(--dlk)}ins{background:var(--il);color:var(--i
 <div class="card" id="ares"></div>
 </section>
 
+<section id="t-match">
+<div class="card"><b>Match check</b><br><small>Free, no AI needed. Paste the original chapter (any language), the translated chapter, or both. It finds every glossary term in each text and tells you if the translation uses the exact glossary form, a misspelling, a wrong form, a short form, or something else. With only one text pasted it still lists the terms it finds.</small>
+<div class="row" style="margin-top:6px"><div><label>Load from a saved chapter</label><select id="mch"></select></div><div style="flex:0 0 auto"><button class="g" id="mld">Load</button></div><div style="flex:0 0 auto"><button class="g" id="msv" title="Saves the translation box into the chosen chapter">Save translation to chapter</button></div><div style="flex:0 0 130px"><label>Chapter number</label><input id="mnum" type="number" min="1" placeholder="auto" title="Used for name versions (a character who changes name later)"></div></div>
+<div class="two"><div><label>Original / raw chapter</label><textarea id="mraw"></textarea></div><div><label>Translated chapter (fixes are applied here)</label><textarea id="mtr"></textarea></div></div>
+<div class="chk"><input type="checkbox" id="mfz" checked><span>Find misspelled or slightly different names (fuzzy match)</span></div>
+<div class="chk"><input type="checkbox" id="mun" checked><span>Find names in the translation that are not in the glossary yet</span></div>
+<div class="bar" style="margin-top:10px"><button class="b" id="mgo">Check (free)</button><button class="g" id="mai" title="Asks AI how the translation renders the terms that stayed unclear">Check unclear ones with AI</button><button class="g" id="mfx" title="Replaces known wrong forms with the glossary form">Fix wrong forms</button><button class="g" id="mfx2" title="Also replaces possible misspellings">Fix wrong forms and misspellings</button><button class="g" id="mrev">Revert last fix</button><button class="g" id="mpr" title="Copies the glossary lines for the terms found in the original, to give to another AI before translating">Copy glossary prompt for this chapter</button><select id="mflt" style="width:auto"><option value="prob">Show problems only</option><option value="all">Show everything</option></select></div></div>
+<div id="mres" hidden></div>
+</section>
+
 <section id="t-read">
 <div class="card"><select id="rsel"></select>
 <div class="bar" style="margin-top:10px"><button class="b" id="rre">Translate this chapter again</button><button class="g" id="raud">Audit this chapter</button><button class="g" id="rcp" title="Copy with formatting (paste into Word, Docs, editors)">Copy English</button><button class="g" id="rmd" title="Copy as Markdown">Copy MD</button><button class="g" id="rht" title="Copy HTML source">Copy HTML</button></div>
@@ -210,7 +217,7 @@ $('#ndel').onclick=()=>{
 };
 
 /* tabs */
-document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button,section').forEach(e=>e.classList.remove('on'));b.classList.add('on');$('#t-'+b.dataset.t).classList.add('on');const t=b.dataset.t;if(t=='read')renderRead();if(t=='glossary')renderGl();if(t=='audit')renderAudit()});
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button,section').forEach(e=>e.classList.remove('on'));b.classList.add('on');$('#t-'+b.dataset.t).classList.add('on');const t=b.dataset.t;if(t=='read')renderRead();if(t=='glossary')renderGl();if(t=='audit')renderAudit();if(t=='match')renderMatchSel()});
 const goTab=t=>document.querySelector('[data-t='+t+']').click();
 
 /* settings */
@@ -738,7 +745,7 @@ const parseVers=s=>splitF(s).map(p=>p.match(/^(\d+)\s*[:：]\s*(.+)$/)).filter(B
 $('#gxls').onclick=()=>{
   if(!S.gl.length)return st('The glossary is empty.');
   const ws=XLSX.utils.aoa_to_sheet([['Original','English','Note','Type','Variants','Locked','Gender','Address rules','Other originals','Wrong forms','Versions (chapter:English)'],...S.gl.map(g=>[g.t,g.tr,g.n||'',g.ty||'',g.v||'',g.lk?'yes':'',g.g||'',g.ad||'',g.at||'',g.w||'',verStr(g)])]),wb=XLSX.utils.book_new();
-  ws['!cols']=[{wch:22},{wch:26},{wch:30},{wch:14},{wch:34},{wch:9},{wch:10},{wch:34},{wch:22},{wch:22},{wch:26}];XLSX.utils.book_append_sheet(wb,ws,'Glossary');dl((S.name.replace(/[^\w ]+/g,'')||'glossary')+'-glossary.xlsx',new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/octet-stream'}));
+  ws['!cols']=[{wch:22},{wch:26},{wch:30},{wch:14},{wch:34},{wch:9},{wch:10},{wch:34},{wch:22},{wch:22},{wch:26}];XLSX.utils.book_append_sheet(wb,ws,'Glossary');XLSX.writeFile(wb,(S.name.replace(/[^\w ]+/g,'')||'glossary')+'-glossary.xlsx');
 };
 $('#gimp').onclick=()=>$('#gfile').click();
 $('#gfile').onchange=async e=>{
@@ -868,18 +875,7 @@ $('#aterms').onclick=()=>{
 };
 
 /* backup */
-async function nativeSave(name,blob){
-  try{
-    const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob)});
-    const P=window.Capacitor.Plugins,w=await P.Filesystem.writeFile({path:name,data:b64,directory:'CACHE'});
-    await P.Share.share({title:name,url:w.uri,dialogTitle:'Save or share '+name});
-  }catch(e){if(!/cancel/i.test(String(e&&e.message)))st('Could not save the file: '+(e&&e.message||e))}
-}
-const dl=(name,blob)=>{
-  const cp=window.Capacitor;
-  if(cp&&cp.isNativePlatform&&cp.isNativePlatform()&&cp.Plugins&&cp.Plugins.Filesystem&&cp.Plugins.Share){nativeSave(name,blob);return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
-};
+const dl=(name,blob)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 $('#bkx').onclick=()=>dl('translator-backup-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify({v:2,root:R,settings:Object.assign({},C,{key:''})})],{type:'application/json'}));
 $('#bki').onclick=()=>$('#bkf').click();
 $('#bkf').onchange=async e=>{
@@ -914,6 +910,171 @@ $('#depub').onclick=async()=>{
   dl(book.replace(/[^\w ]+/g,'')+'.epub',await z.generateAsync({type:'blob',mimeType:'application/epub+zip'}));
 };
 
+/* match check: original vs translation against the glossary, free */
+let MR=null,MUNDO=[];
+const isCJ=s=>new RegExp('['+CJ+']').test(s);
+const uRe=(f,fl,sf)=>{const s=escRe(f).replace(/\s+/g,'\\s+').replace(/['’]/g,"['’]");return new RegExp(isCJ(f)?s:'(?<![\\p{L}\\p{N}])'+s+(sf?"(?:['’]?s|es)?":'')+'(?![\\p{L}\\p{N}])',(fl||'')+'iu')};
+function spansOf(text,forms){
+  const low=text.toLowerCase(),all=[];
+  forms.forEach(o=>{const f=o.f;if(!f||(low.indexOf(f.toLowerCase())<0&&!/\s|['’]/.test(f)))return;
+    const re=uRe(f,'g',!isCJ(f));let m;while((m=re.exec(text))){all.push({s:m.index,e:m.index+m[0].length,gi:o.gi,k:o.k,f});if(!m[0].length)re.lastIndex++}});
+  all.sort((a,b)=>(b.e-b.s)-(a.e-a.s)||a.s-b.s);const taken=[];
+  all.forEach(x=>{if(!taken.some(t=>x.s<t.e&&x.e>t.s))taken.push(x)});
+  return taken.sort((a,b)=>a.s-b.s);
+}
+const pOff=t=>{let p=0;const o=[];t.split('\n').forEach(l=>{if(l.trim())o.push({s:p,e:p+l.length});p+=l.length+1});return o};
+const pIdx=(P,x)=>{const i=P.findIndex(p=>x<=p.e);return i<0?P.length-1:i};
+const pAl=(i,PR,PT)=>{const j=PR.length==PT.length?i:pIdx(PT,(PR[i].s+PR[i].e)/2/PR[PR.length-1].e*PT[PT.length-1].e);return [Math.max(0,j-1),Math.min(PT.length-1,j+1),j]};
+const STOP=new Set('the a an he she they it his her their its i we you but and as when then this that there what who how if so or in on at to of for with from by one after before while now just not no yes oh well however though although once even still here why where which these those some all my your our me him them us is was be been are were do did have had suddenly meanwhile finally perhaps maybe'.split(' '));
+const stp=w=>STOP.has(w.toLowerCase());
+function caps(t){
+  const re=/\p{Lu}[\p{L}-]*/gu,T=[];let m;while((m=re.exec(t)))T.push({s:m.index,e:m.index+m[0].length,w:m[0]});
+  const out=new Map();
+  for(let j=0;j<T.length;j++)for(let k=1;k<=4&&j+k<=T.length;k++){
+    if(k>1&&t.slice(T[j+k-2].e,T[j+k-1].s)!=' ')break;
+    if(stp(T[j].w)||stp(T[j+k-1].w))continue;
+    const s=t.slice(T[j].s,T[j+k-1].e);if(!out.has(s))out.set(s,[]);out.get(s).push(T[j].s);
+  }
+  return out;
+}
+const sentStart=(t,p)=>{const b=t.slice(Math.max(0,p-4),p).replace(/[\s"“‘'(\[]+$/,'');return !b||/[.!?…]$/.test(b)};
+const MLAB={ok:['Matches','ok'],mixed:['Mixed forms','warn'],wrong:['Wrong form','bad'],fuzzy:['Possible misspelling','warn'],short:['Short form only','warn'],other:['Translated differently?','warn'],missing:['Not found in translation','warn'],extra:['Not in the original',''],found:['Found in original','ok']};
+const MORD=['wrong','mixed','fuzzy','other','missing','short','extra','ok','found'];
+function mrun(){
+  const raw=$('#mraw').value.replace(/\r/g,'').trim(),tr=$('#mtr').value.replace(/\r/g,'').trim(),n=+$('#mnum').value||null;
+  if(!raw&&!tr)return st('Paste the original, the translation, or both.');
+  if(!S.gl.length)return st('The glossary is empty.');
+  const hasR=!!raw,hasT=!!tr,fzOn=$('#mfz').checked,rf=[],tf=[],all=new Set();
+  S.gl.forEach((g,gi)=>{
+    srcForms(g).forEach(f=>rf.push({gi,f,k:'s'}));if(!g.tr)return;
+    const e=effTr(g,n);tf.push({gi,f:e,k:'ok'});accept(g,n).forEach(a=>{if(a!=e)tf.push({gi,f:a,k:'ok'})});wrongs(g,n).forEach(w=>tf.push({gi,f:w,k:'bad'}));
+  });
+  tf.forEach(o=>all.add(o.f.toLowerCase()));const knownL=[...all];
+  const grp=a=>{const m=new Map();a.forEach(x=>{if(!m.has(x.gi))m.set(x.gi,[]);m.get(x.gi).push(x)});return m};
+  const cnt=a=>{const m={};a.forEach(x=>{const k=x.f.toLowerCase();m[k]=m[k]||{f:x.f,c:0};m[k].c++});return Object.values(m)};
+  const rs=hasR?spansOf(raw,rf):[],ts=hasT?spansOf(tr,tf):[],RB=grp(rs),TB=grp(ts);
+  const PR=hasR?pOff(raw):[],PT=hasT?pOff(tr):[],pool=hasT?caps(tr):new Map();
+  const inTs=p=>ts.some(x=>p>=x.s&&p<x.e);
+  const pc=[],pcaps=j=>pc[j]||(pc[j]=caps(tr.slice(PT[j].s,PT[j].e)));let dfM=null;
+  const df=()=>{if(!dfM){dfM=new Map();PT.forEach((_,j)=>pcaps(j).forEach((_2,c)=>dfM.set(c,(dfM.get(c)||0)+1)))}return dfM};
+  const rows=[],fzAll=new Set();
+  S.gl.forEach((g,gi)=>{
+    const E=g.tr?effTr(g,n):'',rr=RB.get(gi)||[],k=rr.length,tt=TB.get(gi)||[];
+    const okS=tt.filter(x=>x.k=='ok'),m=okS.length,vr=cnt(okS.filter(x=>x.f!=E)),b=cnt(tt.filter(x=>x.k=='bad'));
+    if(hasR&&!k&&!(hasT&&E&&(m||b.length)&&(/^\p{Lu}/u.test(E)||E.includes(' ')||b.length)))return;
+    if(!hasT){if(k)rows.push({gi,E,k,m:0,vr:[],cands:[],s:'found'});return}
+    let fz=[];
+    if(fzOn&&E&&(k||!hasR)&&/^\p{Lu}/u.test(E)&&E.length>=4&&E.split(/\s+/).length<=4){
+      const L=E.length,thr=L<=7?1:L<=12?2:3,kk=E.split(/\s+/).length,le=E.toLowerCase();
+      pool.forEach((pos,s)=>{const ls=s.toLowerCase();if(all.has(ls)||Math.abs(s.length-L)>thr||s.split(' ').length!=kk)return;const c=pos.filter(p=>!inTs(p)).length;if(!c)return;const d=dist(ls,le,thr);if(d>0&&d<=thr){fz.push({f:s,c});fzAll.add(s)}});
+    }
+    const sh=[];
+    if(k&&!m&&!b.length&&!fz.length&&E.includes(' '))E.split(/\s+/).filter(w=>w.length>=3&&!stp(w)).forEach(w=>{const re=uRe(w,'g',true);let c=0,x;while((x=re.exec(tr)))if(!inTs(x.index))c++;if(c)sh.push({f:w,c})});
+    const ph=[];
+    if(sh.length)pool.forEach((pos,s)=>{if(!s.includes(' ')||all.has(s.toLowerCase()))return;const c=pos.filter(p=>!inTs(p)).length;if(c&&sh.some(x=>s.toLowerCase().split(' ').includes(x.f.toLowerCase())))ph.push({f:s,c})});
+    ph.sort((a,b)=>b.f.length-a.f.length);const phk=ph.filter((x,i)=>!ph.slice(0,i).some(y=>y.f.includes(x.f)));
+    let s=null;
+    if(k||!hasR)s=m&&!b.length&&!fz.length?'ok':m?'mixed':b.length?'wrong':fz.length?'fuzzy':ph.length?'other':sh.length?'short':null;
+    else s=b.length&&!m?'wrong':'extra';
+    if(s==null&&!hasR)return;
+    const row={gi,E,k,m,vr,s,cands:[...b.map(x=>({...x,t:'b'})),...fz.map(x=>({...x,t:'z'})),...(s=='short'?sh.map(x=>({...x,t:'s'})):[]),...(s=='other'&&phk.length?phk.slice(0,3).map(x=>({f:x.f,c:x.c,t:'g',cf:'shares words with the glossary name'})):[])]};
+    if(s==null){
+      const ps=[...new Set(rr.map(x=>pIdx(PR,x.s)))];
+      if(/^\p{Lu}/u.test(E)){
+        const hit=new Map();
+        ps.forEach(i=>{const [a,z]=pAl(i,PR,PT),seen=new Set();for(let j=a;j<=z;j++)pcaps(j).forEach((_,c)=>seen.add(c));seen.forEach(c=>{const lc=c.toLowerCase();if(!knownL.some(q=>q.includes(lc)))hit.set(c,(hit.get(c)||0)+1)})});
+        const D=df();
+        [...hit].map(([c,h])=>({f:c,h,d:D.get(c)||1,sc:h/Math.sqrt(D.get(c)||1)})).sort((a,b)=>b.sc-a.sc||a.d-b.d).slice(0,ps.length>1?2:3)
+         .forEach(x=>row.cands.push({f:x.f,c:x.h,t:'g',cf:ps.length>1&&x.h==ps.length&&x.d<=x.h+1?'likely':'maybe'}));
+      }
+      row.s=row.cands.length?'other':'missing';
+    }
+    if(row.s!='ok'&&k&&hasT&&PT.length){
+      const x=rr[0],j=pAl(pIdx(PR,x.s),PR,PT)[2];
+      row.rc=esc(raw.slice(Math.max(0,x.s-50),x.s))+'<b>'+esc(raw.slice(x.s,x.e))+'</b>'+esc(raw.slice(x.e,x.e+50));
+      row.tc=esc(tr.slice(PT[j].s,PT[j].e).slice(0,260));
+    }
+    rows.push(row);
+  });
+  rows.sort((a,b)=>MORD.indexOf(a.s)-MORD.indexOf(b.s)||b.k-a.k);
+  let unk=[];
+  if(hasT&&$('#mun').checked){
+    const arr=[];
+    pool.forEach((pos,s)=>{if(all.has(s.toLowerCase())||fzAll.has(s))return;const o=pos.filter(p=>!inTs(p));if(o.length<2)return;if(o.filter(p=>!sentStart(tr,p)).length<(s.includes(' ')?1:2))return;arr.push({f:s,c:o.length})});
+    arr.sort((a,b)=>b.f.length-a.f.length);const keep=[];
+    arr.forEach(x=>{if(!keep.some(t=>t.f.includes(x.f)&&t.c>=x.c*0.7))keep.push(x)});
+    unk=keep.sort((a,b)=>b.c-a.c).slice(0,40);
+  }
+  MR={rows,unk,raw,tr,n,hasR,hasT};renderMatch();
+  const pr=rows.filter(r=>!['ok','found'].includes(r.s)).length;
+  st('Match check finished: '+rows.length+' glossary term(s) found'+(hasT?', '+pr+' need a look':'')+'.');
+}
+function renderMatch(){
+  const M=MR,box=$('#mres');if(!M){box.hidden=true;return}box.hidden=false;
+  const cn={};M.rows.forEach(r=>cn[r.s]=(cn[r.s]||0)+1);
+  const all=$('#mflt').value=='all',L=M.rows.map((r,i)=>[r,i]).filter(([r])=>all||!['ok','found'].includes(r.s));
+  const CT={b:'known wrong form',z:'looks like a misspelling',g:'name near the same place',s:'short form of the name'};
+  const btn=(ri,ci,a,l,cl)=>'<button class="'+(cl||'g')+'" data-ma="'+ri+':'+ci+':'+a+'">'+l+'</button>';
+  let h='<div class="card"><b>Result</b> <small>'+(M.rows.length?M.rows.length+' glossary term(s) found: '+MORD.filter(s=>cn[s]).map(s=>cn[s]+' '+MLAB[s][0].toLowerCase()).join(' · '):'No glossary term found in the text. Check that the glossary belongs to this novel.')+'</small>'
+   +(M.hasR&&M.hasT?'<br><small>“Not found” can be harmless: the name may have been replaced by he/she or left out in the translation.</small>':'')+'</div>';
+  h+='<div class="card">'+(L.length?L.map(([r,i])=>{
+    const g=S.gl[r.gi],lb=MLAB[r.s];
+    return '<div class="iss"><div><b>'+esc(g.t)+'</b> → <b>'+esc(r.E)+'</b> <span class="tag '+lb[1]+'">'+lb[0]+'</span> <small>'+(M.hasR?'original '+r.k+'×':'')+(M.hasT?(M.hasR?' · ':'')+'translation '+r.m+'×':'')+'</small></div>'
+     +(r.vr.length?'<small>Accepted variants used: '+r.vr.map(x=>esc(x.f)+' '+x.c+'×').join(', ')+'</small>':'')
+     +(r.ai?'<div><small>AI: '+esc(r.ai.verdict)+(r.ai.used?' · uses “'+esc(r.ai.used)+'”':'')+(r.ai.note?' ('+esc(r.ai.note)+')':'')+'</small></div>':'')
+     +r.cands.map((c,ci)=>'<div class="item" style="flex-wrap:wrap"><span class="t" style="white-space:normal">“'+esc(c.f)+'”'+(c.c&&c.t!='g'?' ×'+c.c:'')+' <small>'+CT[c.t]+(c.cf?' · '+c.cf:'')+'</small></span>'
+       +(c.t!='s'?btn(i,ci,'r','Replace with “'+esc(r.E)+'”','b'):'')+(c.t!='b'?btn(i,ci,'a','Accept as variant'):'')+(c.t=='z'||c.t=='g'?btn(i,ci,'w','Mark as wrong form'):'')+'</div>').join('')
+     +(r.rc?'<div class="diff"><small>Original:</small> …'+r.rc+'…<br><small>Translation, same place:</small> '+r.tc+'</div>':'')
+     +(r.s!='ok'?'<div class="bar" style="margin:6px 0 0">'+btn(i,'','x','Dismiss')+'</div>':'')+'</div>';
+  }).join(''):'<small>'+(M.rows.length?'No problems found.':'Nothing to show.')+'</small>')+'</div>';
+  if(M.unk.length)h+='<div class="card"><b>Names not in the glossary</b> <small>(capitalized names that repeat in the translation; some may be ordinary words)</small>'
+   +M.unk.map((u,i)=>'<div class="item"><span class="t">“'+esc(u.f)+'” <small>×'+u.c+'</small></span><button class="g" data-mu="'+i+'">Add to proposals</button></div>').join('')
+   +'<div class="bar" style="margin-top:8px"><button class="g" data-mu="all">Add all to proposals</button></div></div>';
+  box.innerHTML=h;
+}
+function mfix(map){
+  const ta=$('#mtr');let t=ta.value,c=0;map.forEach(([f,E])=>{t=t.replace(uRe(f,'g',false),()=>{c++;return E})});
+  if(!c)return st('Nothing to replace.');MUNDO.push(ta.value);ta.value=t;mrun();st(c+' replacement(s) made in the translation box. “Revert last fix” undoes it.');
+}
+$('#mgo').onclick=mrun;$('#mflt').onchange=renderMatch;
+$('#mfx').onclick=()=>MR&&mfix(MR.rows.flatMap(r=>r.cands.filter(c=>c.t=='b').map(c=>[c.f,r.E])));
+$('#mfx2').onclick=()=>MR&&mfix(MR.rows.flatMap(r=>r.cands.filter(c=>c.t=='b'||c.t=='z').map(c=>[c.f,r.E])));
+$('#mrev').onclick=()=>{if(!MUNDO.length)return st('Nothing to revert.');$('#mtr').value=MUNDO.pop();mrun()};
+$('#mres').onclick=e=>{
+  const d=e.target.dataset;
+  if(d.mu!==undefined){
+    const L=d.mu=='all'?MR.unk:[MR.unk[+d.mu]];snap('Add names from Match check');
+    const n=addPend(L.map(u=>({t:u.f,tr:u.f})));st(n+' name(s) added to Proposed changes in the Glossary tab.');return;
+  }
+  if(!d.ma)return;
+  const [ri,ci,a]=d.ma.split(':'),r=MR.rows[+ri];if(!r)return;
+  if(a=='x'){MR.rows.splice(+ri,1);renderMatch();return}
+  const c=r.cands[+ci],g=S.gl[r.gi];if(!c)return;
+  if(a=='r')mfix([[c.f,r.E]]);
+  else if(a=='a'){snap('Accept “'+c.f+'” as a form of “'+g.tr+'”');g.v=(g.v?g.v+'; ':'')+c.f;sv();mrun()}
+  else if(a=='w'){snap('Mark “'+c.f+'” as a wrong form of “'+g.tr+'”');g.w=(g.w?g.w+'; ':'')+c.f;sv();mrun()}
+};
+$('#mai').onclick=()=>{
+  if(!MR||!MR.hasR||!MR.hasT)return st('Run the free check first with both texts pasted.');
+  const L=MR.rows.map((r,i)=>[r,i]).filter(([r])=>['mixed','fuzzy','short','other','missing'].includes(r.s)).slice(0,40);
+  if(!L.length)return st('Nothing unclear to check.');
+  aiRun('AI check',async()=>{
+    st('Asking AI how the translation renders '+L.length+' term(s)...');
+    const r=await gem('You compare an original chapter with its English translation and report how glossary terms were translated. Reply with a JSON array only.',
+     'Original:\n'+MR.raw.slice(0,14000)+'\n\nTranslation:\n'+MR.tr.slice(0,14000)+'\n\nTerms (number. original => expected English):\n'+L.map(([r,i])=>i+'. '+S.gl[r.gi].t+' => '+r.E).join('\n')+'\n\nFor each term say how the translation renders it. Format: [{"i":number,"verdict":"ok|different|omitted|pronoun","used":"exact English words used in the translation, or empty","note":"very short"}]',true);
+    jparse(r).forEach(x=>{const row=MR.rows[+x.i];if(!row)return;row.ai={verdict:String(x.verdict||''),used:String(x.used||'').trim(),note:String(x.note||'')};
+      const u=row.ai.used;if(row.ai.verdict=='different'&&u&&u.toLowerCase()!=row.E.toLowerCase()&&!row.cands.some(c=>c.f.toLowerCase()==u.toLowerCase())){row.cands.unshift({f:u,c:0,t:'g',cf:'AI'});if(row.s=='missing')row.s='other'}});
+    renderMatch();
+  });
+};
+$('#mpr').onclick=e=>{const L=(MR?MR.rows:[]).filter(r=>r.k).map(r=>S.gl[r.gi]);if(!L.length)return st('Run the check with an original text first.');copyText('Use this glossary. Keep these exact English names, use the gender given for pronouns and follow the address rules:\n'+glLines(L,MR.n),e.currentTarget)};
+function renderMatchSel(){$('#mch').innerHTML='<option value="">Choose a chapter</option>'+S.ch.map((c,i)=>'<option value="'+i+'">'+(i+1)+'. '+esc(c.title)+'</option>').join('')}
+$('#mld').onclick=()=>{const i=$('#mch').value;if(i==='')return st('Choose a chapter first.');const c=S.ch[+i];$('#mraw').value=c.src||'';$('#mtr').value=c.out||'';$('#mnum').value=+i+1;MUNDO=[];MR=null;renderMatch()};
+$('#msv').onclick=()=>{
+  const i=$('#mch').value;if(i==='')return st('Choose a chapter first.');const c=S.ch[+i],t=$('#mtr').value.trim();if(!c||!t)return;
+  snap('Save from Match check to chapter '+(+i+1),{gl:false,ch:[+i]});c.out=t;c.done=true;if(!c.src&&$('#mraw').value.trim())c.src=$('#mraw').value.trim();sv();renderCh();st('Saved to chapter '+(+i+1)+'.');
+};
+$('#nov').addEventListener('change',()=>{MR=null;MUNDO=[];renderMatch();renderMatchSel()});
+
 useNovel(R.cur);
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
