@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LoreKeeper</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f2f5f8;--card:#fff;--ink:#1c2733;--mut:#66758a;--line:#d8dfe8;--ac:#1f5fd1;--acink:#fff;--ok:#1b8a52;--bad:#c23b3b;--wn:#b7791f;--dl:#f6d4d4;--dlk:#7a1f1f;--il:#cfeedd;--ilk:#14532d}
+@media (prefers-color-scheme:dark){:root{--bg:#10151c;--card:#18202a;--ink:#e4eaf2;--mut:#8b9bb0;--line:#2a3544;--ac:#5b93f0;--acink:#08121f;--ok:#4cc58a;--bad:#ef7a7a;--wn:#e5b45a;--dl:#4a2323;--dlk:#f6c9c9;--il:#1d4331;--ilk:#c6f0d9}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:14px 16px 0;max-width:1100px;margin:0 auto}
+h1{font-size:20px;margin:0 0 2px}
+#st{font-size:13px;color:var(--mut);min-height:20px;margin-bottom:8px}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{background:none;border:0;border-bottom:3px solid transparent;padding:9px 14px;color:var(--mut);font:inherit;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--ink);border-color:var(--ac);font-weight:600}
+main{max-width:1100px;margin:0 auto;padding:14px 16px 60px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:110px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.row>*{flex:1 1 140px}
+.chk{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:14px}.chk input{width:auto}
+button.b{background:var(--ac);color:var(--acink);border:0;border-radius:6px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+button.g{background:none;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:7px 12px;font:inherit;cursor:pointer}
+button.x{color:var(--bad)}
+button:disabled{opacity:.45;cursor:default}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.nvb{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0 8px}.nvb select{width:auto;min-width:180px}
+.item{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}.item .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item input,.item select{padding:6px 8px}
+.ent{border-top:1px solid var(--line)}.ent:first-child{border-top:0}.ent>.item{border-top:0}
+.det{padding:2px 0 12px 26px}
+.ck{width:auto!important;flex:0 0 auto}
+.tag{font-size:12px;color:var(--mut)}.tag.ok{color:var(--ok)}.tag.warn,.warn{color:var(--wn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.two{grid-template-columns:1fr}}
+.two textarea{min-height:360px}
+small{color:var(--mut)}
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0}.prog i{display:block;height:100%;width:0;background:var(--ac);transition:width .3s}
+#lp{white-space:pre-wrap;max-height:170px;overflow:auto;font-size:13px;color:var(--mut);margin:0;font-family:inherit}
+.ban{background:var(--bg);border:1px solid var(--ac);border-radius:6px;padding:10px;margin-bottom:10px}
+.iss{border-top:1px solid var(--line);padding:10px 0}.iss:first-child{border-top:0}
+.diff{font-size:13px;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;margin:6px 0}
+del{background:var(--dl);color:var(--dlk)}ins{background:var(--il);color:var(--ilk);text-decoration:none}
+.tag.bad{color:var(--bad)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style></head><body>
+<header><h1>LoreKeeper <small style="font-size:13px;font-weight:400">glossary-first novel translation</small></h1>
+<div class="nvb"><select id="nov" title="Each novel has its own chapters and glossary"></select><button class="g" id="nnew">New novel</button><button class="g" id="nren">Rename</button><button class="g x" id="ndel">Delete</button><span style="flex:1"></span><button class="g" id="undo">Undo</button></div>
+<div id="st">Ready.</div>
+<nav id="tabs"><button data-t="setup" class="on">Setup</button><button data-t="chapters">Chapters</button><button data-t="glossary">Glossary</button><button data-t="audit">Audit and fix</button><button data-t="match">Match check</button><button data-t="read">Read and edit</button></nav></header>
+<main>
+<div id="bkban" class="ban" hidden></div>
+
+<section id="t-setup" class="on">
+<div class="card">
+<label>Gemini API key (from Google AI Studio)</label>
+<input id="key" type="password" autocomplete="off" placeholder="Paste key here. It stays in this browser only.">
+<div class="row">
+<div><label>Model</label><input id="model"></div>
+<div><label>Source language</label><select id="src"><option>Chinese</option><option>Korean</option><option>Japanese</option><option value="the original language (auto-detect)">Auto-detect</option></select></div>
+<div><label>Seconds between requests</label><input id="gap" type="number" min="0" max="60"></div>
+<div><label>Part size (characters)</label><input id="chunk" type="number" min="1500" max="15000" step="500"></div>
+</div>
+<label>Extra instructions for the translator (optional)</label>
+<textarea id="extra" style="min-height:70px" placeholder="Example: Keep cultivation terms in English. Use a casual tone for dialogue. Keep honorifics like -senpai."></textarea>
+<div class="chk"><input type="checkbox" id="ctx"><span>Send the end of the previous part as context (keeps the story flowing)</span></div>
+<div class="chk"><input type="checkbox" id="sug"><span>Suggest new names and terms for the glossary after each chapter (adds one request per chapter)</span></div>
+<div class="chk"><input type="checkbox" id="pre"><span>Pre-scan: before translating a chapter, read the original and add new names to the glossary first (adds one request per chapter)</span></div>
+<div class="chk"><input type="checkbox" id="fast"><span>Fast mode: switch off the model’s extra thinking (quicker translation)</span></div>
+<small>Smaller delay and bigger parts make it faster. If you hit rate limits, raise the delay. The tool waits and retries by itself.</small>
+</div>
+<div class="card">
+<b>Add chapters</b>
+<label>Upload .txt or .epub files (several allowed)</label>
+<input id="files" type="file" multiple accept=".txt,.epub">
+<div class="chk"><input type="checkbox" id="isen"><span>These files or this pasted text are already English translations (made by another AI). They are kept as translated chapters so the glossary can check them.</span></div>
+<label>Or paste text (headings like “Chapter 5”, 第5章, 제5화 are split automatically)</label>
+<textarea id="paste"></textarea>
+<div class="bar" style="margin-top:10px"><button class="b" id="addp">Add pasted text</button><button class="g x" id="clr">Remove all chapters</button></div>
+</div>
+<div class="card"><b>Backup</b><br><small>Saves all novels with their chapters, translations and glossaries in one file. Your API key is not included.</small>
+<div class="bar" style="margin-top:10px"><button class="g" id="bkx">Export backup</button><button class="g" id="bki">Import backup</button><input type="file" id="bkf" accept=".json" hidden></div></div>
+</section>
+
+<section id="t-chapters">
+<div class="card" id="livebox" hidden><div id="lt"></div><div class="prog"><i id="pb"></i></div><pre id="lp"></pre></div>
+<div class="bar"><button class="b" id="all">Translate all remaining</button><button class="g" id="stop">Stop</button><button class="g" id="pscan" title="Reads the originals of untranslated chapters and adds new names to the glossary, without translating">Pre-scan terms</button><button class="g" id="dcopy" title="Copy all translated chapters with formatting">Copy all</button><button class="g" id="dtxt">Download TXT</button><button class="g" id="depub">Download EPUB</button><button class="g" id="toaud">Audit and fix</button></div>
+<div class="card" id="pipe"></div>
+<div class="card" id="chl"></div>
+<div class="card"><b>Chapter health</b> <span class="tag">free, no AI</span>
+<div class="bar" style="margin:8px 0"><button class="g" id="hscan">Scan all chapters</button></div><div id="hout"><span class="tag">Finds leftover Chinese/Japanese/Korean characters, paragraph count mismatch, and translations that look too short.</span></div></div>
+<div class="card"><b>Find and replace in all translations</b>
+<div class="row"><div><label>Find</label><input id="rf"></div><div><label>Replace with</label><input id="rr"></div><div style="flex:0 0 auto"><button class="g" id="rpl">Replace all</button></div></div></div>
+</section>
+
+<section id="t-glossary">
+<div class="card"><b>Add a term</b>
+<div class="row"><div><label>Original term</label><input id="gt"></div><div><label>English</label><input id="gr"></div><div style="flex:0 0 130px"><label>Gender</label><select id="gg"><option value="">Not set</option><option value="male">Male</option><option value="female">Female</option><option value="neutral">Neutral</option></select></div><div><label>Note (title, place...)</label><input id="gn"></div><div style="flex:0 0 auto"><button class="b" id="gadd">Add</button></div></div>
+<div id="gwarn" class="warn" style="margin-top:6px"></div></div>
+
+<div class="card"><b>Paste text to find terms</b><br><small>Paste a list, a table copied from Excel, a whole translated chapter with glossary notes at the end, or a JSON list from another AI. The tool finds Characters, Items, Skills and Places and compares them with your glossary.</small>
+<textarea id="gpaste" style="margin-top:8px" placeholder="林风 - Lin Feng - male&#10;Lin Feng (林风) = main character&#10;青云宗, Azure Cloud Sect"></textarea>
+<div class="bar" style="margin-top:10px"><button class="b" id="gdet">Detect terms</button><button class="g" id="gai">Detect with AI</button><button class="g" id="gsave" title="Save the pasted chapter in Chapters, without the notes">Save chapter without notes</button><button class="g" id="gprm" title="Copy a prompt that makes another AI add glossary notes after its translation">Copy prompt for other AI</button></div></div>
+
+<div class="card"><b>Name changes and term versions</b><br><small>When a character gets a new name, title or way of being addressed inside the story, record it as a version: from a chapter number onward, the new English form is used. Chapters before it keep the old form.</small>
+<div class="row" style="margin-top:6px"><div><label>Chapter to check</label><select id="vch"></select></div><div style="flex:0 0 auto"><button class="g" id="vdet">Detect name changes with AI</button></div><div style="flex:0 0 auto"><button class="g" id="vprm" title="Copy a prompt for another AI. Paste the chapter after it, then paste the answer into Detect terms.">Copy prompt for other AI</button></div></div></div>
+
+<div class="card"><b>Proposed changes</b> <small>(nothing changes until you apply it)</small><div id="pend"></div>
+<div class="bar" style="margin-top:8px"><button class="g" id="pall" title="Applies additions, changes and versions. Removals need a click on each.">Apply all adds and changes</button><button class="g x" id="pclr">Clear list</button></div></div>
+
+<div class="card"><b>Glossary</b> <small id="gcount"></small>
+<div id="ren" class="ban" hidden></div>
+<div class="row" style="margin:8px 0"><div style="flex:2 1 200px"><input id="gfil" placeholder="Search glossary"></div>
+<div><select id="fsort"><option value="order">Sort: as added</option><option value="new">Newest first</option><option value="az">Original A to Z</option><option value="en">English A to Z</option><option value="type">Type</option><option value="uses">Most used</option><option value="conf">Warnings first</option></select></div>
+<div><select id="ftype"></select></div>
+<div><select id="fgen"><option value="">Any gender</option><option value="male">Male</option><option value="female">Female</option><option value="neutral">Neutral</option><option value="-">Not set</option></select></div></div>
+<div class="chk"><input type="checkbox" id="fconf"><span>Only entries with warnings</span><input type="checkbox" id="funu" style="margin-left:14px"><span>Only unused entries</span></div>
+<div class="bar" id="bulk"><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" id="bsa" class="ck">Select all matching</label><span class="tag">Selected: <b id="bcnt">0</b></span><select id="bty" style="width:auto"></select><select id="bgn" style="width:auto"><option value="">Set gender...</option><option value="male">Male</option><option value="female">Female</option><option value="neutral">Neutral</option></select><button class="g" id="blk">Lock</button><button class="g" id="bul">Unlock</button><button class="g" id="bmg" title="Keeps the first selected entry and folds the others into it">Merge selected</button><button class="g x" id="bdl">Delete selected</button></div>
+<div id="ccard" class="ban" hidden></div>
+<div id="gl"></div>
+<div class="bar" style="margin-top:8px"><button class="g" id="gmore" hidden>Show more</button></div>
+<div class="bar" style="margin-top:10px"><button class="b" id="gxls">Export Excel</button><button class="g" id="gimp">Import Excel or CSV</button><button class="g" id="gcp">Copy as prompt</button><button class="g" id="gclean" title="AI finds duplicates, conflicting notes and wrong types, and proposes fixes">Smart clean (AI)</button><button class="g" id="gpx" title="One file with terms, types, genders, address rules and versions. Import it into any other novel.">Export glossary pack</button><button class="g" id="gpi">Import glossary pack</button><input type="file" id="gpf" accept=".json" hidden><button class="g x" id="gdel">Delete all</button><input type="file" id="gfile" accept=".xlsx,.xls,.csv" hidden></div></div>
+
+<div class="card"><b>History</b> <small>(every change can be rolled back)</small><div id="hl"></div></div>
+</section>
+
+<section id="t-audit">
+<div class="card"><b>Check translated chapters against the glossary</b><br><small>Works on chapters translated here and on English chapters you added from another AI. It finds names that do not match the glossary and shows each fix as a before and after. Only the wrong words or sentences are changed.</small>
+<div class="row"><div><label>Chapters</label><select id="asc"></select></div></div>
+<div class="bar" style="margin-top:10px"><button class="b" id="aloc" title="Free, no AI. Finds wrong forms, misspelled names and missing terms">Scan (free)</button><button class="g" id="aai" title="Also checks gender pronouns, address rules and other wordings">Scan with AI</button><button class="g" id="aterms" title="Finds names in the English chapters that are not in the glossary yet">Find new terms (AI)</button><button class="g" id="astop">Stop</button></div>
+<div class="bar"><button class="g" id="aapp" title="Applies wrong-form and AI fixes. Guesses stay for you to check.">Apply all fixes</button><button class="g" id="aapp2">Apply all including guesses</button><button class="g x" id="aclr">Clear results</button></div>
+<div id="asum"></div></div>
+<div class="card" id="ares"></div>
+<div class="card"><b>Pronoun check</b> <span class="tag">free heuristic, no AI</span><br><small>Finds paragraphs where only male (or only female) glossary characters are named, but the narration uses the other gender’s pronouns. Quoted speech is ignored. These are hints, not errors: an unnamed person can be the reason. Needs characters with a gender set.</small>
+<div class="bar" style="margin-top:8px"><button class="b" id="prn">Run pronoun check</button></div><div id="prnr"></div></div>
+</section>
+
+<section id="t-match">
+<div class="card"><b>Match check</b><br><small>Free, no AI needed. Paste the original chapter (any language), the translated chapter, or both. It finds every glossary term in each text and tells you if the translation uses the exact glossary form, a misspelling, a wrong form, a short form, or something else. With only one text pasted it still lists the terms it finds.</small>
+<div class="row" style="margin-top:6px"><div><label>Load from a saved chapter</label><select id="mch"></select></div><div style="flex:0 0 auto"><button class="g" id="mld">Load</button></div><div style="flex:0 0 auto"><button class="g" id="msv" title="Saves the translation box into the chosen chapter">Save translation to chapter</button></div><div style="flex:0 0 130px"><label>Chapter number</label><input id="mnum" type="number" min="1" placeholder="auto" title="Used for name versions (a character who changes name later)"></div></div>
+<div class="two"><div><label>Original / raw chapter</label><textarea id="mraw"></textarea></div><div><label>Translated chapter (fixes are applied here)</label><textarea id="mtr"></textarea></div></div>
+<div class="chk"><input type="checkbox" id="mfz" checked><span>Find misspelled or slightly different names (fuzzy match)</span></div>
+<div class="chk"><input type="checkbox" id="mun" checked><span>Find names in the translation that are not in the glossary yet</span></div>
+<div class="bar" style="margin-top:10px"><button class="b" id="mgo">Check (free)</button><button class="g" id="mai" title="Asks AI how the translation renders the terms that stayed unclear">Check unclear ones with AI</button><button class="g" id="mfx" title="Replaces known wrong forms with the glossary form">Fix wrong forms</button><button class="g" id="mfx2" title="Also replaces possible misspellings">Fix wrong forms and misspellings</button><button class="g" id="mrev">Revert last fix</button><button class="g" id="mpr" title="Copies the glossary lines for the terms found in the original, to give to another AI before translating">Copy glossary prompt for this chapter</button><select id="mflt" style="width:auto"><option value="prob">Show problems only</option><option value="all">Show everything</option></select></div></div>
+<div id="mres" hidden></div>
+</section>
+
+<section id="t-read">
+<div class="card"><select id="rsel"></select>
+<div class="bar" style="margin-top:10px"><button class="b" id="rre">Translate this chapter again</button><button class="g" id="raud">Audit this chapter</button><button class="g" id="rcp" title="Copy with formatting (paste into Word, Docs, editors)">Copy English</button><button class="g" id="rmd" title="Copy as Markdown">Copy MD</button><button class="g" id="rht" title="Copy HTML source">Copy HTML</button></div>
+<div class="two"><div><label>Original</label><textarea id="rsrc" readonly></textarea></div><div><label>English (you can edit it)</label><textarea id="rout"></textarea></div></div></div>
+</section>
+</main>
+
+<script type="text/plain" id="app">
+const $=s=>document.querySelector(s);
+const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const wordRe=(w,f)=>new RegExp('(?<![A-Za-z0-9])'+escRe(w)+'(?![A-Za-z0-9])',f||'');
+const jparse=r=>{r=r.replace(/```json|```/g,'').trim();try{return JSON.parse(r)}catch(e){const a=r.indexOf('['),b=r.lastIndexOf(']');return JSON.parse(r.slice(a,b+1))}};
+const CJ='\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af';
+const TYPES=['','Character','Item','Skill','Place','Organization','Title','Other'];
+const typeOf=s=>{s=String(s||'').toLowerCase();if(!s)return'';return /char|people|person|name/.test(s)?'Character':/item|artifact|weapon|equip|treasure|pill|herb/.test(s)?'Item':/skill|technique|spell|abilit|move/.test(s)?'Skill':/place|location|city|region|realm|land|map/.test(s)?'Place':/org|sect|faction|clan|guild|family|group/.test(s)?'Organization':/title|rank|honorific/.test(s)?'Title':'Other'};
+const gOf=s=>{s=String(s||'').trim().toLowerCase();if(!s)return'';if(/^(f|fem|woman|girl|she)/.test(s))return'female';if(/^(m|male|man|boy|he$)/.test(s))return'male';if(/^(n|neu|they|it$|none|unknown|other)/.test(s))return'neutral';return''};
+const gFromNote=n=>/\b(female|woman|girl|she\/her)\b/i.test(n||'')?'female':/\b(male|man|boy|he\/him)\b/i.test(n||'')?'male':'';
+
+/* data: several novels, each with its own chapters and glossary */
+function newNovel(name){return {id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name,ch:[],gl:[],pend:[]}}
+function norm(n){n.ch=n.ch||[];n.gl=n.gl||[];n.pend=n.pend||[];n.gl.forEach(g=>{if(g.g===undefined)g.g=gFromNote(g.n);g.vers=g.vers||[]})}
+let R=BOOT.R||null;
+if(!R||!Array.isArray(R.novels)){const o=R&&R.ch?R:{};R={cur:'n1',novels:[{id:'n1',name:'Novel 1',ch:o.ch||[],gl:o.gl||[],pend:o.pend||[]}]}}
+if(!R.novels.length)R.novels.push(newNovel('Novel 1'));
+R.novels.forEach(norm);
+let S=R.novels.find(n=>n.id==R.cur)||R.novels[0];
+let C=Object.assign({key:'',model:'gemini-3.8-flash',src:'Chinese',ctx:true,sug:true,pre:false,gap:2,chunk:6000,fast:true,extra:''},(BOOT.set||{}));
+if(/^gemini-2\.5/.test(C.model))C.model='gemini-3.8-flash';
+if(!C.v2){C.gap=2;C.chunk=6000;C.fast=true;C.v2=1}
+let stopFlag=false,busy=false,curMsg='Ready.',t0=0;
+let H=[],SEL=new Set(),OPEN=new Set(),CF=[],ISS=[],REN=null,LIM=150,UC=new Map();
+const sv=()=>{UC=new Map();try{chkBk()}catch(e){}if(BOOT.db)DBX.queue(R,C);else try{localStorage.setItem('nt_state',JSON.stringify(R));localStorage.setItem('nt_set',JSON.stringify(C))}catch(e){curMsg='Browser storage is full. Download your work.'}};
+const st=m=>{curMsg=m;showSt()};
+const showSt=()=>{$('#st').textContent=curMsg+(busy?'  ·  '+Math.floor((Date.now()-t0)/1000)+'s':'');if(busy)$('#lt').textContent=curMsg};
+setInterval(()=>{if(busy)showSt()},1000);
+const bar=f=>{$('#pb').style.width=Math.max(0,Math.min(100,f*100))+'%'};
+
+/* history and undo */
+const hk=()=>'nt_h_'+S.id;
+function loadH(){H=BOOT.hist[S.id]||[]}
+function saveH(){while(H.length>25)H.shift();const cap=BOOT.db?8e6:1.2e6;let s;for(;;){s=JSON.stringify(H);if(s.length<cap||H.length<=1)break;H.shift()}BOOT.hist[S.id]=H;DBX.hist(S.id,s)}
+function snap(label,o){o=o||{};const e={t:Date.now(),l:label};if(o.gl!==false){e.gl=JSON.stringify(S.gl);e.pd=JSON.stringify(S.pend)}if(o.ch&&o.ch.length){e.o={};o.ch.forEach(i=>{if(S.ch[i])e.o[i]=S.ch[i].out})}H.push(e);saveH();renderHist()}
+function undoTo(k){
+  if(!H[k])return;const lab=H[k].l;
+  for(let j=H.length-1;j>=k;j--){const e=H[j];if(e.gl)S.gl=JSON.parse(e.gl);if(e.pd)S.pend=JSON.parse(e.pd);if(e.o)for(const i in e.o)if(S.ch[i])S.ch[i].out=e.o[i]}
+  H.length=k;saveH();sv();SEL.clear();renderCh();renderGl();renderHist();renderIss();st('Undone: '+lab);
+}
+function renderHist(){
+  const L=$('#hl');
+  L.innerHTML=H.length?H.map((e,k)=>[e,k]).reverse().map(([e,k])=>'<div class="item"><span class="tag">'+new Date(e.t).toLocaleTimeString()+'</span><span class="t">'+esc(e.l)+'</span><button class="g" data-h="'+k+'">Go back before this</button></div>').join(''):'<small>No changes yet.</small>';
+  $('#undo').disabled=!H.length;$('#undo').title=H.length?'Undo: '+H[H.length-1].l:'Nothing to undo';
+}
+$('#hl').onclick=e=>{const k=e.target.dataset.h;if(k!==undefined)undoTo(+k)};
+$('#undo').onclick=()=>{if(H.length)undoTo(H.length-1)};
+
+/* novels */
+function renderNov(){$('#nov').innerHTML=R.novels.map(n=>'<option value="'+n.id+'"'+(n===S?' selected':'')+'>'+esc(n.name)+'</option>').join('')}
+function useNovel(id){
+  S=R.novels.find(n=>n.id==id)||R.novels[0];R.cur=S.id;norm(S);loadH();SEL.clear();OPEN.clear();ISS=[];REN=null;LIM=150;sv();
+  renderNov();renderCh();renderGl();renderRead();renderAudit();renderHist();
+}
+$('#nov').onchange=e=>useNovel(e.target.value);
+$('#nnew').onclick=()=>{const n=prompt('Name of the new novel?');if(!n||!n.trim())return;const o=newNovel(n.trim());R.novels.push(o);sv();useNovel(o.id)};
+$('#nren').onclick=()=>{const n=prompt('New name?',S.name);if(!n||!n.trim())return;S.name=n.trim();sv();renderNov()};
+$('#ndel').onclick=()=>{
+  if(R.novels.length<2)return st('You need at least one novel. Rename this one instead.');
+  if(!confirm('Delete “'+S.name+'” with all its chapters and its glossary? Export a backup first if unsure.'))return;
+  DBX.delHist(S.id);delete BOOT.hist[S.id];
+  R.novels=R.novels.filter(n=>n!==S);sv();useNovel(R.novels[0].id);
+};
+
+/* tabs */
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button,section').forEach(e=>e.classList.remove('on'));b.classList.add('on');$('#t-'+b.dataset.t).classList.add('on');const t=b.dataset.t;if(t=='read')renderRead();if(t=='glossary')renderGl();if(t=='audit')renderAudit();if(t=='match')renderMatchSel()});
+const goTab=t=>document.querySelector('[data-t='+t+']').click();
+
+/* settings */
+['key','model','src','gap','chunk','extra'].forEach(k=>{const e=$('#'+k);e.value=C[k];e.onchange=()=>{C[k]=['gap','chunk'].includes(k)?+e.value:e.value.trim();sv()}});
+['ctx','sug','pre','fast'].forEach(k=>{const e=$('#'+k);e.checked=C[k];e.onchange=()=>{C[k]=e.checked;sv()}});
+
+/* importing chapters */
+const HEAD=/^\s*(第\s*[\d一二三四五六七八九十百千零〇两]+\s*[章话話回节節]|제\s*\d+\s*[화장]|chapter\s*\d+|ch\.?\s*\d+)/i;
+function splitText(t,name){
+  const lines=t.replace(/\r/g,'').split('\n'),idx=[];
+  lines.forEach((l,i)=>{if(l.length<80&&HEAD.test(l))idx.push(i)});
+  if(idx.length<2)return [{title:name,src:t.trim()}];
+  return idx.map((s,k)=>({title:lines[s].trim(),src:lines.slice(s+1,idx[k+1]??lines.length).join('\n').trim()})).filter(c=>c.src.length>20);
+}
+function addCh(list){
+  const en=$('#isen').checked;
+  list.forEach(c=>S.ch.push(en?{title:c.title,src:'',out:c.src,done:true}:{title:c.title,src:c.src,out:'',done:false}));
+  sv();renderCh();st(list.length+' chapter(s) added'+(en?' as translated English chapters':'')+'. Open the Chapters tab.');
+}
+async function readEpub(f){
+  const z=await JSZip.loadAsync(f),P=new DOMParser();
+  const cont=P.parseFromString(await z.file('META-INF/container.xml').async('string'),'text/xml');
+  const opfPath=cont.querySelector('rootfile').getAttribute('full-path'),base=opfPath.includes('/')?opfPath.replace(/[^/]+$/,''):'';
+  const opf=P.parseFromString(await z.file(opfPath).async('string'),'text/xml'),man={};
+  opf.querySelectorAll('manifest > item').forEach(i=>man[i.getAttribute('id')]=i.getAttribute('href'));
+  const out=[];let n=0;
+  for(const r of opf.querySelectorAll('spine > itemref')){
+    const h=man[r.getAttribute('idref')];if(!h)continue;
+    const fl=z.file(decodeURIComponent(base+h));if(!fl)continue;
+    const d=P.parseFromString(await fl.async('string'),'text/html');
+    const txt=[...d.querySelectorAll('h1,h2,h3,h4,p')].map(e=>e.textContent.trim()).filter(Boolean).join('\n');
+    if(txt.length<200)continue;n++;
+    out.push({title:(d.querySelector('h1,h2,h3')?.textContent.trim())||('Section '+n),src:txt});
+  }
+  return out;
+}
+$('#files').onchange=async e=>{
+  for(const f of e.target.files){
+    try{if(/\.epub$/i.test(f.name)){st('Reading '+f.name+'...');addCh(await readEpub(f))}else addCh(splitText(await f.text(),f.name.replace(/\.txt$/i,'')))}
+    catch(err){st('Could not read '+f.name+': '+err.message)}
+  }e.target.value='';
+};
+$('#addp').onclick=()=>{const t=$('#paste').value.trim();if(!t)return;addCh(splitText(t,'Pasted text'));$('#paste').value=''};
+$('#clr').onclick=()=>{if(confirm('Remove all chapters and translations of this novel? The glossary stays.')){S.ch=[];sv();renderCh();renderAudit()}};
+
+/* Gemini (streams text so you can watch it arrive) */
+async function gem(sys,user,json,onTxt){
+  if(!C.key)throw new Error('Add your API key in Setup first.');
+  const cfg={temperature:0.4};if(json)cfg.responseMimeType='application/json';if(C.fast)cfg.thinkingConfig={thinkingBudget:0};
+  const safety=['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(c=>({category:c,threshold:'BLOCK_NONE'}));
+  for(let a=0;a<6;a++){
+    if(stopFlag)throw new Error('stopped');
+    const body={systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts:[{text:user}]}],generationConfig:cfg,safetySettings:safety};
+    let r;
+    try{r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(C.model)+(onTxt?':streamGenerateContent?alt=sse':':generateContent'),{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':C.key},body:JSON.stringify(body)})}
+    catch(e){throw new Error('Network error. Check your internet connection.')}
+    if(r.status==429||r.status==503){const w=20*(a+1);for(let s=w;s>0;s--){if(stopFlag)throw new Error('stopped');st('Rate limit reached. Retrying in '+s+'s (attempt '+(a+1)+'/6)');await sleep(1000)}continue}
+    if(!r.ok){
+      const d=await r.json().catch(()=>({})),m=(d.error&&d.error.message)||('API error '+r.status);
+      if(r.status==400&&/think/i.test(m)&&cfg.thinkingConfig){delete cfg.thinkingConfig;C.fast=false;$('#fast').checked=false;sv();a--;continue}
+      throw new Error(m);
+    }
+    if(onTxt){
+      const rd=r.body.getReader(),dec=new TextDecoder();let buf='',txt='',fin='';
+      while(true){
+        const {done,value}=await rd.read();if(done)break;
+        if(stopFlag){rd.cancel();throw new Error('stopped')}
+        buf+=dec.decode(value,{stream:true});let i;
+        while((i=buf.indexOf('\n'))>=0){
+          const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+          if(!line.startsWith('data:'))continue;
+          try{const d=JSON.parse(line.slice(5)),c=d.candidates&&d.candidates[0];
+            if(c){if(c.content&&c.content.parts)txt+=c.content.parts.map(p=>p.text||'').join('');if(c.finishReason)fin=c.finishReason}
+            else if(d.promptFeedback&&d.promptFeedback.blockReason)fin=d.promptFeedback.blockReason}catch(e){}
+        }
+        onTxt(txt);
+      }
+      if(!txt)throw new Error('No text returned ('+(fin||'unknown reason')+').');
+      return txt;
+    }
+    const d=await r.json().catch(()=>({})),c=d.candidates&&d.candidates[0];
+    const t=c&&c.content&&c.content.parts?c.content.parts.map(p=>p.text||'').join(''):'';
+    if(!t)throw new Error('No text returned ('+((d.promptFeedback&&d.promptFeedback.blockReason)||(c&&c.finishReason)||'unknown reason')+').');
+    return t;
+  }
+  throw new Error('Still rate limited after 6 attempts. Try again later or raise the delay.');
+}
+async function aiRun(label,fn){
+  if(busy)return st('Already working. Press Stop first.');
+  busy=true;stopFlag=false;t0=Date.now();
+  try{await fn();busy=false;st(curMsg.startsWith('Error')?curMsg:label+' finished in '+Math.floor((Date.now()-t0)/1000)+'s.')}
+  catch(e){busy=false;st(e.message=='stopped'?'Stopped. Progress is saved.':'Error: '+e.message)}
+  busy=false;
+}
+function chunk(t){
+  const max=C.chunk||6000,ps=t.split(/\n+/).filter(p=>p.trim()),out=[];let cur='';
+  for(const p of ps){if(cur&&cur.length+p.length>max){out.push(cur);cur=''}cur+=(cur?'\n':'')+p}
+  if(cur)out.push(cur);return out;
+}
+
+/* glossary helpers: forms, versions, prompt lines */
+const splitF=s=>String(s||'').split(/[;；]/).map(x=>x.trim()).filter(Boolean);
+const srcForms=g=>[g.t,...splitF(g.at)].filter(Boolean);
+const effTr=(g,n)=>{let r=g.tr;if(n&&g.vers&&g.vers.length)for(const v of g.vers)if(v.from<=n&&v.tr)r=v.tr;return r};
+const accept=(g,n)=>[effTr(g,n),...splitF(g.v).map(s=>s.replace(/\(.*?\)/g,'').trim())].filter(Boolean);
+function wrongs(g,n){
+  const eff=effTr(g,n),ok=new Set(accept(g,n).map(s=>s.toLowerCase())),o=splitF(g.w);
+  [g.tr,...(g.vers||[]).map(v=>v.tr)].forEach(s=>{if(s&&s.toLowerCase()!=eff.toLowerCase())o.push(s)});
+  return [...new Set(o)].filter(s=>s&&!ok.has(s.toLowerCase()));
+}
+const glLines=(L,n)=>L.map(x=>{
+  const m=[x.ty,x.g&&('gender: '+x.g),x.n].filter(Boolean).join(', '),o=srcForms(x);
+  return (o[0]||'')+(o.length>1?' (also written: '+o.slice(1).join(' / ')+')':'')+' => '+effTr(x,n)+(m?' ('+m+')':'')
+   +(x.v?' [other forms: '+x.v+']':'')+(x.ad?' [address rules: '+x.ad+']':'')+(x.w?' [never use: '+x.w+']':'')
+   +(!n&&x.vers&&x.vers.length?' [later forms: '+x.vers.map(v=>'from chapter '+v.from+' = '+v.tr).join('; ')+']':'');
+}).join('\n');
+
+/* translation */
+async function tr(part,tail,n){
+  const g=S.gl.filter(x=>srcForms(x).some(f=>part.includes(f)));
+  const sys='You are a professional webnovel translator. Translate the text from '+C.src+' into natural, fluent English that reads like a published novel. Keep every paragraph and line break. Never summarize, skip, censor or add commentary. Output only the translation.'
+   +(C.extra?'\n\nExtra instructions from the user:\n'+C.extra:'')
+   +(g.length?'\n\nGLOSSARY (use these exactly. Use the gender given for he/she/his/her and follow any address rules. If an entry lists other forms, use the form that fits the context. Never use the words listed under never use):\n'+glLines(g,n):'');
+  const user=(tail?'Previous passage, for context only. Do not translate it again:\n'+tail+'\n\n---\nTranslate this:\n':'')+part;
+  let best='';
+  for(let k=0;k<2;k++){
+    const o=(await gem(sys,user,false,t=>{$('#lp').textContent=t.slice(-900);$('#lp').scrollTop=1e6})).trim();
+    if(o.length>best.length)best=o;
+    if(o.length>=part.length*0.5)return o;
+    st('Output looks too short, retrying...');
+  }
+  return best;
+}
+async function suggest(c){
+  try{
+    st('Looking for new names and terms...');
+    const r=await gem('You extract names and recurring terms for a translation glossary. Reply with a JSON array only.',
+     'Original text:\n'+c.src.slice(0,7000)+'\n\nEnglish translation:\n'+c.out.slice(0,7000)+'\n\nList character names, places, sects, titles, skills and special terms that appear in the original, with the English used in the translation. For characters add the gender (male, female or neutral) judged from the text. Skip anything already in this glossary: '+S.gl.map(x=>x.t).join(', ')+'\nFormat: [{"t":"original term","tr":"English","ty":"Character|Item|Skill|Place|Organization|Title|Other","g":"male|female|neutral","n":"short note, e.g. city"}]',true);
+    addPend(jparse(r));
+  }catch(e){if(e.message=='stopped')throw e}
+}
+/* pre-scan: add new names from the original BEFORE translating */
+async function prescan(c,n){
+  try{
+    const known=S.gl.filter(g=>srcForms(g).some(f=>c.src.includes(f)));let found=[];
+    for(let p=0,k=0;p<c.src.length&&k<4;p+=12000,k++){
+      st('Pre-scan chapter '+n+': reading the original...');
+      const r=await gem('You extract names and recurring terms for a translation glossary. Reply with a JSON array only.',
+       'Source language: '+C.src+'\nGlossary entries already known (do not repeat them):\n'+(glLines(known,n)||'(none)')+'\n\nOriginal chapter text:\n'+c.src.slice(p,p+12000)+'\n\nList every character name, place, sect or organization, title, skill, item and special term in this text that is NOT in the glossary above. Give one consistent English rendering (romanize names), the type, and for characters the gender (male, female or neutral) judged from the text.\nFormat: [{"t":"original","tr":"English","ty":"Character|Item|Skill|Place|Organization|Title|Other","g":"male|female|neutral","n":"short note"}]',true);
+      found=found.concat(jparse(r));
+    }
+    snap('Pre-scan chapter '+n);let add=0;
+    found.forEach(x=>{if(!x||!x.t||!x.tr)return;const t=String(x.t).trim();if(S.gl.some(g=>srcForms(g).includes(t)))return;S.gl.push({t,tr:String(x.tr).trim(),n:x.n?String(x.n).trim():'',ty:typeOf(x.ty),g:gOf(x.g)||gFromNote(x.n),vers:[]});add++});
+    c.scanned=true;sv();renderGl();
+    const cf=conf().filter(a=>a.length).length;
+    st('Pre-scan chapter '+n+': '+add+' new term(s) added'+(cf?', '+cf+' glossary warning(s)':'')+'.');
+  }catch(e){if(e.message=='stopped')throw e;st('Pre-scan skipped: '+e.message)}
+}
+async function doCh(i,pi,total){
+  const c=S.ch[i],parts=chunk(c.src),out=[];let tail='';
+  if(C.pre&&!c.scanned){await prescan(c,i+1);await sleep(C.gap*1000)}
+  for(let k=0;k<parts.length;k++){
+    if(stopFlag)throw new Error('stopped');
+    bar((pi+k/parts.length)/total);$('#lp').textContent='';
+    st('Chapter '+(i+1)+' ('+(pi+1)+' of '+total+'): translating part '+(k+1)+' of '+parts.length+'...');
+    const t=await tr(parts[k],tail,i+1);out.push(t);tail=C.ctx?t.slice(-700):'';
+    if(k<parts.length-1)await sleep(C.gap*1000);
+  }
+  c.out=out.join('\n\n');c.done=true;sv();renderCh();bar((pi+1)/total);
+  if(C.sug){await sleep(C.gap*1000);await suggest(c)}
+}
+async function run(list){
+  if(busy)return st('Already working. Press Stop first.');
+  list=list.filter(i=>S.ch[i]&&S.ch[i].src);
+  if(!list.length)return st('Nothing to translate. Chapters added as English have no original text.');
+  busy=true;stopFlag=false;t0=Date.now();$('#livebox').hidden=false;
+  goTab('chapters');
+  try{for(let p=0;p<list.length;p++){await doCh(list[p],p,list.length);if(p<list.length-1)await sleep(C.gap*1000)}busy=false;st('Finished in '+Math.floor((Date.now()-t0)/1000)+'s.');$('#lt').textContent='Finished.'}
+  catch(e){busy=false;st(e.message=='stopped'?'Stopped. Progress is saved.':'Error: '+e.message);$('#lt').textContent=curMsg}
+  busy=false;
+}
+$('#all').onclick=()=>run(S.ch.map((c,i)=>c.done?-1:i).filter(i=>i>=0));
+$('#stop').onclick=()=>{stopFlag=true;st('Stopping...')};
+$('#astop').onclick=()=>{stopFlag=true;st('Stopping...')};
+$('#pscan').onclick=()=>{
+  let L=S.ch.map((c,i)=>c.src&&!c.done?i:-1).filter(i=>i>=0);
+  if(!L.length)L=S.ch.map((c,i)=>c.src?i:-1).filter(i=>i>=0);
+  if(!L.length)return st('No chapters with original text to scan.');
+  $('#livebox').hidden=false;
+  aiRun('Pre-scan',async()=>{for(let k=0;k<L.length;k++){bar(k/L.length);await prescan(S.ch[L[k]],L[k]+1);if(k<L.length-1)await sleep(C.gap*1000)}bar(1)});
+};
+$('#toaud').onclick=()=>goTab('audit');
+
+/* chapters */
+let PF='';
+const STG=['raw','pre-scanned','translated','has problems','clean'];
+const stage=c=>!c.done?(c.scanned?1:0):(c.mc!==undefined&&c.mc===(c.out||'').length?(c.mp?3:4):2);
+const PFok=c=>!PF||(PF=='prob'?stage(c)==3:stage(c)==2&&!!c.out);
+function renderPipe(){
+  const cnt=[0,0,0,0,0];S.ch.forEach(c=>cnt[stage(c)]++);
+  $('#pipe').innerHTML='<b>Pipeline</b> <span class="tag">free, no AI</span><div class="tag" style="margin:6px 0">'+STG.map((x,k)=>cnt[k]+' '+x).join(' → ')+'</div><div class="bar"><button class="b" id="pmc">Match check all translated chapters</button><select id="pflt" style="width:auto"><option value="">Show all chapters</option><option value="prob"'+(PF=='prob'?' selected':'')+'>Only with problems</option><option value="chk"'+(PF=='chk'?' selected':'')+'>Only not checked yet</option></select></div><small>A chapter is “clean” after a check finds no wrong forms, misspellings, missing terms or leftover original characters. Editing a translation resets it to “translated”.</small>';
+  $('#pmc').onclick=batchMatch;$('#pflt').onchange=e=>{PF=e.target.value;renderCh()};
+}
+async function batchMatch(){
+  const cj=new RegExp('['+CJ+']'),L=S.ch.map((c,i)=>i).filter(i=>S.ch[i].done&&S.ch[i].out);
+  if(!L.length)return st('No translated chapters to check.');
+  let bad=0;
+  for(let k=0;k<L.length;k++){const c=S.ch[L[k]],p=scanLocal(L[k]).length+(cj.test(c.out)?1:0);c.mc=c.out.length;c.mp=p;if(p)bad++;if(k%10==9){st('Checking '+(k+1)+' of '+L.length+'...');await sleep(0)}}
+  sv();renderCh();st('Checked '+L.length+' chapters: '+bad+' with problems, '+(L.length-bad)+' clean. Use “Only with problems”, then open the Audit tab.');
+}
+function renderCh(){
+  renderPipe();
+  $('#chl').innerHTML=S.ch.length?S.ch.map((c,i)=>!PFok(c)?'':'<div class="item"><span class="tag">'+(i+1)+'</span><span class="t">'+esc(c.title)+'</span><span class="tag '+(c.done?'ok':'')+'">'+(c.done?(c.src?'translated':'English'):c.src.length+' chars')+'</span><span class="tag '+(stage(c)==3?'warn':stage(c)==4?'ok':'')+'">'+STG[stage(c)]+(stage(c)==3?' · '+c.mp:'')+'</span>'+(c.done?'<button class="g" data-c="'+i+'" title="Copy with formatting">Copy</button>':'')+'<button class="g" data-r="'+i+'">'+(c.done?'Read':'Translate')+'</button></div>').join(''):'<small>No chapters yet. Add some in Setup.</small>';
+  $('#chl').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>copyRich([S.ch[+b.dataset.c]],b,false));
+  $('#chl').querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const i=+b.dataset.r;if(S.ch[i].done)openRead(i);else run([i])});
+}
+function openRead(i){goTab('read');$('#rsel').value=i;showRead()}
+function renderRead(){$('#rsel').innerHTML=S.ch.map((c,i)=>'<option value="'+i+'">'+(i+1)+'. '+esc(c.title)+'</option>').join('');showRead()}
+function showRead(){const c=S.ch[+$('#rsel').value];$('#rsrc').value=c?c.src:'';$('#rout').value=c?c.out:''}
+$('#rsel').onchange=showRead;
+$('#rout').onchange=()=>{const c=S.ch[+$('#rsel').value];if(c){snap('Edit chapter '+(+$('#rsel').value+1),{gl:false,ch:[+$('#rsel').value]});c.out=$('#rout').value;sv()}};
+$('#rre').onclick=()=>run([+$('#rsel').value]).then(()=>{renderRead()});
+$('#raud').onclick=()=>{const i=$('#rsel').value;if(i==='')return;goTab('audit');$('#asc').value=i;$('#aloc').click()};
+/* copy helpers */
+const flash=(b,ok)=>{const o=b.dataset.o||b.textContent;b.dataset.o=o;b.textContent=ok?'Copied!':'Copy failed';setTimeout(()=>{b.textContent=o},1400)};
+const paras=t=>t.split(/\n+/).filter(p=>p.trim());
+const toHtml=(cs,tt)=>cs.map(c=>(tt?'<h2>'+esc(c.title)+'</h2>':'')+paras(c.out).map(p=>'<p>'+esc(p)+'</p>').join('')).join('');
+const toMd=(cs,tt)=>cs.map(c=>(tt?'## '+c.title+'\n\n':'')+paras(c.out).join('\n\n')).join('\n\n');
+const toPlain=(cs,tt)=>cs.map(c=>(tt?c.title+'\n\n':'')+paras(c.out).join('\n\n')).join('\n\n\n');
+function copyRich(cs,btn,tt){
+  const h=toHtml(cs,tt),pl=toPlain(cs,tt);let ok=false;
+  const onCopy=e=>{e.clipboardData.setData('text/html',h);e.clipboardData.setData('text/plain',pl);e.preventDefault()};
+  const t=document.createElement('textarea');t.value=' ';t.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(t);t.select();
+  document.addEventListener('copy',onCopy,{once:true});
+  try{ok=document.execCommand('copy')}catch(e){}
+  document.removeEventListener('copy',onCopy);t.remove();
+  if(ok)return flash(btn,true);
+  try{navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([pl],{type:'text/plain'})})]).then(()=>flash(btn,true)).catch(()=>flash(btn,false))}catch(e){flash(btn,false)}
+}
+async function copyText(t,btn){
+  let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true}catch(e){}
+  if(!ok){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(a);a.focus();a.select();try{ok=document.execCommand('copy')}catch(e){}a.remove()}
+  flash(btn,ok);
+}
+const curCh=()=>[{title:(S.ch[+$('#rsel').value]||{}).title||'',out:$('#rout').value}];
+$('#rcp').onclick=e=>copyRich(curCh(),e.currentTarget,false);
+$('#rmd').onclick=e=>copyText(toMd(curCh(),false),e.currentTarget);
+$('#rht').onclick=e=>copyText(toHtml(curCh(),false),e.currentTarget);
+$('#dcopy').onclick=e=>{const d=doneCh();if(!d.length)return st('Nothing translated yet.');copyRich(d,e.currentTarget,true)};
+$('#rpl').onclick=()=>{
+  const f=$('#rf').value,r=$('#rr').value;if(!f)return;
+  const hit=S.ch.map((c,i)=>c.out&&c.out.includes(f)?i:-1).filter(i=>i>=0);
+  if(!hit.length)return st('0 replacements made.');
+  snap('Find and replace “'+f+'”',{gl:false,ch:hit});let n=0;
+  hit.forEach(i=>{const c=S.ch[i];n+=c.out.split(f).length-1;c.out=c.out.split(f).join(r)});sv();st(n+' replacement(s) made.');
+};
+
+/* glossary: conflicts and usage */
+function conf(){
+  const m=S.gl.map(()=>[]),byT=new Map(),byTr=new Map();
+  S.gl.forEach((g,i)=>{
+    srcForms(g).forEach(f=>{const k=f.toLowerCase();if(!byT.has(k))byT.set(k,[]);byT.get(k).push(i)});
+    const tr=(g.tr||'').toLowerCase();if(tr){if(!byTr.has(tr))byTr.set(tr,[]);byTr.get(tr).push(i)}
+  });
+  const nm=j=>(S.gl[j].t||'')+' / '+(S.gl[j].tr||'');
+  byT.forEach((a,k)=>{const u=[...new Set(a)];if(u.length>1)u.forEach(i=>m[i].push('The original “'+k+'” also belongs to: '+u.filter(j=>j!=i).map(nm).join(', ')))});
+  byTr.forEach((a,k)=>{if(a.length>1&&new Set(a.map(i=>S.gl[i].t.toLowerCase())).size>1)a.forEach(i=>m[i].push('The English “'+k+'” is also used for: '+a.filter(j=>j!=i).map(j=>S.gl[j].t).join(', ')))});
+  S.gl.forEach((g,i)=>{
+    if(g.g&&g.n){const n=g.n.toLowerCase(),f=/\b(female|woman|girl)\b/.test(n),ma=!f&&/\b(male|man|boy)\b/.test(n);if((g.g=='male'&&f)||(g.g=='female'&&ma))m[i].push('Gender is set to '+g.g+' but the note says otherwise.')}
+    splitF(g.w).forEach(w=>{if(byTr.has(w.toLowerCase())&&byTr.get(w.toLowerCase()).some(j=>j!=i))m[i].push('The wrong form “'+w+'” is the English name of another entry.')});
+  });
+  return m;
+}
+function uses(g){
+  if(UC.has(g))return UC.get(g);
+  let n=0;const ch=[];
+  S.ch.forEach((c,i)=>{const hay=c.src||c.out||'';if(!hay)return;const nd=c.src?srcForms(g):accept(g,i+1);let k=0;nd.forEach(f=>{let p=0;while((p=hay.indexOf(f,p))>=0){k++;p+=f.length}});if(k){n+=k;ch.push(i+1)}});
+  const r={n,ch};UC.set(g,r);return r;
+}
+function liveWarn(){
+  const t=$('#gt').value.trim(),r=$('#gr').value.trim(),w=[];
+  if(t){
+    const e=S.gl.find(g=>srcForms(g).includes(t));if(e)w.push('“'+t+'” is already in the glossary as “'+e.tr+'”. Adding will update that entry.');
+    S.gl.forEach(g=>{if(srcForms(g).includes(t))return;const o=srcForms(g).find(f=>f.length>1&&(f.includes(t)||t.includes(f)));if(o&&t.length>1)w.push('Overlaps with “'+o+'” ('+g.tr+'). The shorter term may match inside the longer one.')});
+  }
+  if(r){
+    S.gl.forEach(g=>{if(srcForms(g).includes(t))return;const a=accept(g).map(s=>s.toLowerCase());if(a.includes(r.toLowerCase()))w.push('The English “'+r+'” is already used for “'+g.t+'”.');else if(r.length>4&&a.some(x=>Math.abs(x.length-r.length)<=1&&dist(x,r.toLowerCase(),1)<=1))w.push('“'+r+'” is almost the same as “'+g.tr+'” ('+g.t+').')});
+  }
+  $('#gwarn').innerHTML=[...new Set(w)].slice(0,5).map(esc).join('<br>');
+}
+$('#gt').oninput=liveWarn;$('#gr').oninput=liveWarn;
+
+/* glossary list */
+const fld=(i,f,v,ph,sty)=>'<input data-i="'+i+'" data-f="'+f+'" value="'+esc(v||'')+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(sty?' style="'+sty+'"':'')+'>';
+const tySel=(g,i)=>'<select data-i="'+i+'" data-f="ty" style="flex:0 0 120px">'+TYPES.map(t=>'<option value="'+t+'"'+(t==(g.ty||'')?' selected':'')+'>'+(t||'Type')+'</option>').join('')+'</select>';
+const gSel=(g,i)=>'<select data-i="'+i+'" data-f="g" style="flex:0 0 96px">'+[['','Gender'],['male','Male'],['female','Female'],['neutral','Neutral']].map(([v,l])=>'<option value="'+v+'"'+(v==(g.g||'')?' selected':'')+'>'+l+'</option>').join('')+'</select>';
+function appear(g){const u=uses(g);return u.ch.length?'First appearance: chapter '+u.ch[0]+' · found in '+u.ch.length+' chapter(s): '+u.ch.slice(0,40).join(', ')+(u.ch.length>40?' …':''):'Not found in any chapter yet'}
+function det(g,i,cf){
+  return '<div class="det"><div class="tag" style="margin-bottom:6px">'+appear(g)+'</div>'+(cf.length?'<div class="warn"><small>'+cf.map(esc).join('<br>')+'</small></div>':'')
+   +'<div class="row"><div><label>Other valid English forms (formal, casual...)</label>'+fld(i,'v',g.v,'Mayor Gu (formal); Brother Gu (casual)')+'</div><div><label>Wrong forms to auto-correct (separate with ;)</label>'+fld(i,'w',g.w,'Lin Fong; Lin Fen')+'</div></div>'
+   +'<div class="row"><div><label>Address rules (who calls whom what)</label>'+fld(i,'ad',g.ad,"Calls Mei 'Senior Sister'. Mei calls him 'Junior Brother'.")+'</div><div><label>Other spellings of the original (separate with ;)</label>'+fld(i,'at',g.at,'')+'</div></div>'
+   +'<label>Versions: from this chapter number onward, use another English form</label>'
+   +(g.vers||[]).map((v,k)=>'<div class="item"><span class="tag">From chapter</span><input type="number" min="1" style="flex:0 0 90px" data-i="'+i+'" data-vk="'+k+'" data-vf="from" value="'+v.from+'"><input data-i="'+i+'" data-vk="'+k+'" data-vf="tr" value="'+esc(v.tr)+'"><button class="g x" data-vd="'+i+':'+k+'">Remove</button></div>').join('')
+   +'<button class="g" data-va="'+i+'" style="margin-top:6px">Add version</button></div>';
+}
+function erow(g,i){
+  const u=uses(g),cf=CF[i]||[];
+  return '<div class="ent"><div class="item" style="flex-wrap:wrap"><input type="checkbox" class="ck" data-s="'+i+'"'+(SEL.has(g)?' checked':'')+'>'
+   +fld(i,'t',g.t,'','flex:1 1 120px')+fld(i,'tr',g.tr,'','flex:1 1 120px')+tySel(g,i)+gSel(g,i)+fld(i,'n',g.n,'note','flex:1 1 140px')
+   +(u.ch.length?'<span class="tag" title="First appears in chapter '+u.ch[0]+'">first: ch '+u.ch[0]+'</span>':'')+'<span class="tag" style="min-width:44px" title="'+(u.ch.length?'Chapters: '+u.ch.join(', '):'Not used in any chapter yet')+'">'+u.n+'×</span>'
+   +(cf.length?'<span class="tag warn" title="'+esc(cf.join('\n'))+'">⚠ '+cf.length+'</span>':'')
+   +(g.vers&&g.vers.length?'<span class="tag" title="Has chapter versions">v'+g.vers.length+'</span>':'')
+   +'<button class="g" data-o="'+i+'">'+(OPEN.has(g)?'Less':'More')+'</button><button class="g" data-l="'+i+'" title="Locked entries are never changed or removed by AI suggestions">'+(g.lk?'🔒 Locked':'Lock')+'</button>'+(g.ty=='Character'?'<button class="g" data-cc="'+i+'" title="Character card: everything about this character in one place">Card</button>':'')+'<button class="g x" data-d="'+i+'">Delete</button></div>'
+   +(OPEN.has(g)?det(g,i,cf):'')+'</div>';
+}
+const BADGE={add:'Add',mod:'Change',del:'Remove',ver:'Version'};
+const prow=(c,i)=>{const a=c.a||'add';return '<div class="item"><span class="t" style="white-space:normal"><span class="tag '+(a=='del'?'':'ok')+'">'+BADGE[a]+'</span> <b>'+esc(c.t)+'</b> → '+esc(c.tr)+(a=='ver'?' <small>from chapter '+c.from+'</small>':'')+(c.ty?' <small>['+esc(c.ty)+']</small>':'')+(c.g?' <small>{'+esc(c.g)+'}</small>':'')+(c.n?' <small>('+esc(c.n)+')</small>':'')+(a=='mod'&&c.old?'<br><small>was: '+esc(c.old.tr)+(c.old.ty?' ['+esc(c.old.ty)+']':'')+(c.old.g?' {'+esc(c.old.g)+'}':'')+(c.old.n?' ('+esc(c.old.n)+')':'')+'</small>':'')+(a=='ver'&&c.old?'<br><small>before: '+esc(c.old.tr)+'</small>':'')+(c.why?'<br><small>'+esc(c.why)+'</small>':'')+'</span><button class="g'+(a=='del'?' x':'')+'" data-a="'+i+'">'+(a=='del'?'Remove':'Apply')+'</button><button class="g" data-n="'+i+'">Dismiss</button></div>'};
+function view(){
+  const q=$('#gfil').value.trim().toLowerCase(),ft=$('#ftype').value,fg=$('#fgen').value,fc=$('#fconf').checked,fu=$('#funu').checked,so=$('#fsort').value;
+  let L=S.gl.map((g,i)=>i).filter(i=>{
+    const g=S.gl[i];
+    if(q&&!(g.t+' '+g.tr+' '+(g.ty||'')+' '+(g.g||'')+' '+(g.v||'')+' '+(g.n||'')+' '+(g.ad||'')+' '+(g.at||'')+' '+(g.w||'')).toLowerCase().includes(q))return false;
+    if(ft&&(g.ty||'')!=(ft=='-'?'':ft))return false;
+    if(fg&&(g.g||'')!=(fg=='-'?'':fg))return false;
+    if(fc&&!CF[i].length)return false;
+    if(fu&&uses(g).n)return false;
+    return true;
+  });
+  const c=(a,b)=>String(a).localeCompare(String(b));
+  if(so=='new')L.reverse();
+  else if(so=='az')L.sort((a,b)=>c(S.gl[a].t,S.gl[b].t));
+  else if(so=='en')L.sort((a,b)=>c(S.gl[a].tr,S.gl[b].tr));
+  else if(so=='type')L.sort((a,b)=>c(S.gl[a].ty||'~',S.gl[b].ty||'~')||c(S.gl[a].tr,S.gl[b].tr));
+  else if(so=='uses')L.sort((a,b)=>uses(S.gl[b]).n-uses(S.gl[a]).n);
+  else if(so=='conf')L.sort((a,b)=>CF[b].length-CF[a].length);
+  return L;
+}
+function updBulk(){$('#bcnt').textContent=SEL.size}
+function updCount(){const w=CF.filter(a=>a.length).length;$('#gcount').textContent='('+S.gl.length+' terms'+(w?', '+w+' with warnings':'')+')'}
+function renderGl(){
+  CF=conf();updCount();
+  const L=view();
+  $('#gl').innerHTML=L.length?L.slice(0,LIM).map(i=>erow(S.gl[i],i)).join(''):'<small>'+(S.gl.length?'No match.':'Empty. Add names so they stay the same in every chapter.')+'</small>';
+  $('#gmore').hidden=L.length<=LIM;$('#gmore').textContent='Show more ('+(L.length-LIM)+' left)';
+  $('#pend').innerHTML=S.pend.length?S.pend.map(prow).join(''):'<small>Nothing waiting.</small>';
+  const vs=S.ch.map((c,i)=>c.out?'<option value="'+i+'">'+(i+1)+'. '+esc(c.title)+'</option>':'').join('');$('#vch').innerHTML=vs||'<option value="">No translated chapters yet</option>';
+  $('#bsa').checked=L.length>0&&L.every(i=>SEL.has(S.gl[i]));
+  updBulk();renderRen();renderHist();liveWarn();
+}
+['gfil','fsort','ftype','fgen','fconf','funu'].forEach(k=>{$('#'+k).oninput=()=>{LIM=150;renderGl()}});
+$('#gmore').onclick=()=>{LIM+=150;renderGl()};
+$('#ftype').innerHTML='<option value="">All types</option>'+TYPES.slice(1).map(t=>'<option>'+t+'</option>').join('')+'<option value="-">No type</option>';
+$('#bty').innerHTML='<option value="">Set type...</option>'+TYPES.slice(1).map(t=>'<option>'+t+'</option>').join('');
+
+/* editing rows */
+$('#gl').onchange=e=>{
+  const t=e.target,d=t.dataset;
+  if(d.s!==undefined){const g=S.gl[+d.s];t.checked?SEL.add(g):SEL.delete(g);updBulk();return}
+  if(d.vf!==undefined){snap('Edit version');const g=S.gl[+d.i],v=g.vers[+d.vk];if(d.vf=='from')v.from=Math.max(1,+t.value||1);else v.tr=t.value.trim();g.vers.sort((a,b)=>a.from-b.from);sv();renderGl();return}
+  if(d.f){
+    const g=S.gl[+d.i];if(!g)return;const old=g[d.f]||'',nv=d.f=='g'?gOf(t.value):t.value.trim();if(old==nv)return;
+    snap('Edit “'+(g.tr||g.t)+'” ('+d.f+')');g[d.f]=nv;sv();CF=conf();updCount();
+    if(d.f=='tr')offerRen(old,nv);
+  }
+};
+$('#gl').onclick=e=>{
+  const d=e.target.dataset;
+  if(d.d!==undefined){const g=S.gl[+d.d];snap('Delete “'+(g.tr||g.t)+'”');S.gl.splice(+d.d,1);SEL.delete(g);sv();renderGl()}
+  else if(d.l!==undefined){const g=S.gl[+d.l];snap('Lock toggle');g.lk=!g.lk;sv();renderGl()}
+  else if(d.o!==undefined){const g=S.gl[+d.o];OPEN.has(g)?OPEN.delete(g):OPEN.add(g);renderGl()}
+  else if(d.va!==undefined){snap('Add version');const g=S.gl[+d.va];g.vers=g.vers||[];g.vers.push({from:Math.max(1,S.ch.filter(c=>c.done).length+1),tr:g.tr});g.vers.sort((a,b)=>a.from-b.from);sv();renderGl()}
+  else if(d.vd!==undefined){snap('Remove version');const [i,k]=d.vd.split(':').map(Number);S.gl[i].vers.splice(k,1);sv();renderGl()}
+};
+
+/* renaming: offer to update chapters */
+function offerRen(old,nw){
+  REN=null;if(!old||!nw||old==nw)return;
+  const re=wordRe(old),hit=[];S.ch.forEach((c,i)=>{if(c.out&&re.test(c.out))hit.push(i)});
+  if(hit.length)REN={old,nw,hit};renderRen();
+}
+function renderRen(){
+  const b=$('#ren');if(!REN){b.hidden=true;return}
+  b.hidden=false;b.innerHTML='You changed “'+esc(REN.old)+'” to “'+esc(REN.nw)+'”. The old name appears in '+REN.hit.length+' translated chapter(s). Update them too?<div class="bar" style="margin:8px 0 0"><button class="b" id="renyes">Replace in those chapters</button><button class="g" id="renno">Not now</button></div>';
+  $('#renyes').onclick=()=>{snap('Rename “'+REN.old+'” in chapters',{gl:false,ch:REN.hit});let n=0;REN.hit.forEach(i=>{const c=S.ch[i];c.out=c.out.replace(wordRe(REN.old,'g'),()=>{n++;return REN.nw})});REN=null;sv();renderRen();st(n+' replacement(s) made in chapters.')};
+  $('#renno').onclick=()=>{REN=null;renderRen()};
+}
+
+/* bulk actions */
+const needSel=()=>{if(!SEL.size){st('Select entries first.');return false}return true};
+$('#bsa').onchange=e=>{const L=view();L.forEach(i=>e.target.checked?SEL.add(S.gl[i]):SEL.delete(S.gl[i]));renderGl()};
+$('#bty').onchange=e=>{const v=e.target.value;e.target.value='';if(!v||!needSel())return;snap('Set type '+v+' on '+SEL.size+' entries');SEL.forEach(g=>g.ty=v);sv();renderGl()};
+$('#bgn').onchange=e=>{const v=e.target.value;e.target.value='';if(!v||!needSel())return;snap('Set gender '+v+' on '+SEL.size+' entries');SEL.forEach(g=>g.g=v);sv();renderGl()};
+$('#blk').onclick=()=>{if(!needSel())return;snap('Lock '+SEL.size+' entries');SEL.forEach(g=>g.lk=true);sv();renderGl()};
+$('#bul').onclick=()=>{if(!needSel())return;snap('Unlock '+SEL.size+' entries');SEL.forEach(g=>g.lk=false);sv();renderGl()};
+$('#bdl').onclick=()=>{if(!needSel())return;if(!confirm('Delete '+SEL.size+' selected entries? You can undo this.'))return;snap('Delete '+SEL.size+' entries');S.gl=S.gl.filter(g=>!SEL.has(g));SEL.clear();sv();renderGl()};
+$('#bmg').onclick=()=>{
+  if(SEL.size<2)return st('Select at least two entries to merge.');
+  const L=S.gl.filter(g=>SEL.has(g)),p=L[0],rest=L.slice(1);
+  if(!confirm('Merge '+rest.length+' entr'+(rest.length>1?'ies':'y')+' into “'+p.t+' / '+p.tr+'”?\nTheir other English names become wrong forms that the audit corrects. Their original spellings are kept. You can undo this.'))return;
+  snap('Merge '+L.length+' entries into “'+p.tr+'”');
+  const add=(f,vals)=>{const cur=splitF(p[f]);vals.forEach(v=>{if(v&&!cur.map(x=>x.toLowerCase()).includes(v.toLowerCase()))cur.push(v)});p[f]=cur.join('; ')};
+  rest.forEach(o=>{
+    add('at',[o.t,...splitF(o.at)].filter(x=>x!=p.t));
+    add('v',splitF(o.v));
+    add('w',[o.tr,...splitF(o.w)].filter(x=>x&&x.toLowerCase()!=p.tr.toLowerCase()&&!splitF(p.v).some(y=>y.replace(/\(.*?\)/g,'').trim().toLowerCase()==x.toLowerCase())));
+    if(o.n&&!(p.n||'').toLowerCase().includes(o.n.toLowerCase()))p.n=p.n?p.n+'; '+o.n:o.n;
+    if(o.ad&&!(p.ad||'').includes(o.ad))p.ad=p.ad?p.ad+' '+o.ad:o.ad;
+    if(!p.g&&o.g)p.g=o.g;if(!p.ty&&o.ty)p.ty=o.ty;if(o.lk)p.lk=true;
+    (o.vers||[]).forEach(v=>{if(!(p.vers||[]).some(x=>x.from==v.from&&x.tr==v.tr))p.vers=(p.vers||[]).concat([v])});
+  });
+  if(p.vers)p.vers.sort((a,b)=>a.from-b.from);
+  S.gl=S.gl.filter(g=>!rest.includes(g));SEL.clear();SEL.add(p);sv();renderGl();st('Merged. Run an audit to correct old names in chapters.');
+};
+
+/* proposals (pending list) */
+function addPend(arr){
+  const A={add:'add',modify:'mod',mod:'mod',remove:'del',del:'del',version:'ver',ver:'ver'};let n=0;
+  arr.forEach(x=>{
+    if(!x||!x.t)return;
+    x={t:String(x.t).trim(),tr:String(x.tr||'').trim(),n:x.n?String(x.n).trim():'',ty:typeOf(x.ty),g:gOf(x.g)||gFromNote(x.n),a:A[String(x.a||'').toLowerCase()],why:x.why?String(x.why).trim():'',from:+x.from||0};
+    const e=S.gl.find(g=>srcForms(g).includes(x.t)),old=e?{tr:e.tr,n:e.n||'',ty:e.ty||'',g:e.g||''}:null;let c;
+    if(e&&e.lk)return;
+    if(x.a=='ver'){
+      if(!e||!x.tr||!x.from)return;
+      if(effTr(e,x.from)==x.tr||(e.vers||[]).some(v=>v.from==x.from&&v.tr==x.tr))return;
+      c={a:'ver',t:e.t,tr:x.tr,from:x.from,why:x.why,old:{tr:effTr(e,x.from)}};
+    }else if(x.a=='del'){if(!e)return;c={a:'del',t:e.t,tr:e.tr,n:old.n,ty:old.ty,g:old.g,old,why:x.why}}
+    else if(e){
+      if(x.a=='mod')c={a:'mod',t:e.t,tr:x.tr||e.tr,n:x.n,ty:x.ty||old.ty,g:x.g||old.g,old,why:x.why};
+      else{const o=old.n.toLowerCase(),w=x.n.toLowerCase(),nn=!x.n||o.includes(w)?old.n:(!old.n||w.includes(o))?x.n:old.n+'; '+x.n;c={a:'mod',t:e.t,tr:x.tr||e.tr,n:nn,ty:x.ty||old.ty,g:x.g||old.g,old,why:x.why}}
+      if(c.tr==old.tr&&c.n==old.n&&c.ty==old.ty&&c.g==old.g)return;
+    }else{if(!x.tr)return;c={a:'add',t:x.t,tr:x.tr,n:x.n,ty:x.ty,g:x.g,why:x.why}}
+    if(S.pend.some(p=>(p.a||'add')==c.a&&p.t==c.t&&p.tr==c.tr&&(p.n||'')==(c.n||'')&&(p.from||0)==(c.from||0)))return;
+    S.pend.push(c);n++;
+  });
+  sv();renderGl();return n;
+}
+function apply(c){
+  const e=S.gl.find(g=>g.t==c.t);
+  if(c.a=='ver'){if(e)e.vers=(e.vers||[]).concat([{from:c.from,tr:c.tr}]).sort((a,b)=>a.from-b.from);return}
+  if(e&&e.lk)return;
+  if(c.a=='del'){S.gl=S.gl.filter(g=>g.t!=c.t);return}
+  if(e){e.tr=c.tr;e.n=c.n||'';if(c.ty)e.ty=c.ty;if(c.g)e.g=c.g}else S.gl.push({t:c.t,tr:c.tr,n:c.n||'',ty:c.ty||'',g:c.g||'',vers:[]});
+}
+$('#pend').onclick=e=>{const a=e.target.dataset.a,n=e.target.dataset.n;if(a!==undefined){snap('Apply a proposed change');apply(S.pend.splice(+a,1)[0])}else if(n!==undefined)S.pend.splice(+n,1);else return;sv();renderGl()};
+$('#pall').onclick=()=>{if(!S.pend.length)return;snap('Apply all proposed changes');const keep=[];S.pend.forEach(c=>c.a=='del'?keep.push(c):apply(c));S.pend=keep;sv();renderGl();if(keep.length)st(keep.length+' removal(s) are still waiting. Apply them one by one if you agree.')};
+$('#pclr').onclick=()=>{S.pend=[];sv();renderGl()};
+$('#gdel').onclick=()=>{if(confirm('Delete the whole glossary of this novel? You can undo this, or export it first.')){snap('Delete whole glossary');S.gl=[];SEL.clear();sv();renderGl()}};
+function upsert(x){
+  const e=S.gl.find(g=>srcForms(g).includes(x.t));
+  if(e){e.tr=x.tr;['n','ty','v','ad','at','w'].forEach(k=>{if(x[k])e[k]=x[k]});if(x.g)e.g=x.g;if(x.vers&&x.vers.length)e.vers=x.vers;if(x.lk)e.lk=true;return false}
+  S.gl.push({t:x.t,tr:x.tr,n:x.n||'',ty:x.ty||'',g:x.g||'',v:x.v||'',ad:x.ad||'',at:x.at||'',w:x.w||'',vers:x.vers||[],lk:!!x.lk});return true;
+}
+$('#gadd').onclick=()=>{
+  const t=$('#gt').value.trim(),r=$('#gr').value.trim();if(!t||!r)return;
+  snap('Add “'+r+'”');upsert({t,tr:r,n:$('#gn').value.trim(),g:gOf($('#gg').value)});
+  ['gt','gr','gn'].forEach(k=>$('#'+k).value='');$('#gg').value='';sv();renderGl();
+};
+
+/* detect terms from pasted text */
+function splitNotes(t){
+  const L=t.replace(/\r/g,'').split('\n');let idx=-1;
+  for(let i=Math.floor(L.length*0.4);i<L.length;i++){
+    const s=L[i].replace(/[#*_=>\-:]/g,' ').trim();
+    if(s&&s.length<60&&/\b(glossary|notes?|new terms|terms)\b/i.test(s)&&!new RegExp('['+CJ+']').test(s)){idx=i;break}
+  }
+  if(idx<0)return {body:t.trim(),notes:'',found:false};
+  let b=idx;while(b>0&&/^\s*([-*_=]{3,}\s*)?$/.test(L[b-1]))b--;
+  return {body:L.slice(0,b).join('\n').trim(),notes:L.slice(idx+1).join('\n').trim(),found:true};
+}
+function parseGl(text,strict){
+  const out=[],hasCJ=s=>new RegExp('['+CJ+']').test(s);let cur='';
+  text.split('\n').forEach(raw=>{
+    let l=raw.replace(/^\s*(?:[-*•>#]+|\d+[.)])\s*/,'').replace(/\*\*|`|__/g,'').trim();
+    if(!l||/^\|?[\s:|-]+\|?$/.test(l))return;
+    const hd=l.replace(/[:：]\s*$/,'').trim();
+    if(hd.length<45&&!hasCJ(hd)&&!/[=|→,]|->|\s[-–—]\s/.test(hd)&&/^(characters?|people|names?|items?|artifacts?|weapons?|equipment|skills?|techniques?|abilities|spells?|places?|locations?|organi[sz]ations?|sects?|factions?|titles?|ranks?|terms?|other|misc\w*)(\s*(and|&|\/)\s*\w+)?$/i.test(hd)){cur=typeOf(hd);return}
+    if(/^\|?\s*(original|term|source|chinese|korean|japanese)\b.*\b(english|translation)/i.test(l))return;
+    if(strict&&!hasCJ(l)&&!/=>|->|→|=|\|/.test(l))return;
+    l=l.replace(/^\||\|$/g,'').trim();
+    let m=l.match(/^(.+?)\s*[（(]([^)）]+)[)）]\s*[-–—:=,]*\s*(.*)$/);
+    if(m&&hasCJ(m[2])!=hasCJ(m[1])){const cj=hasCJ(m[2]);out.push({t:(cj?m[2]:m[1]).trim(),tr:(cj?m[1]:m[2]).trim(),n:m[3].trim(),ty:cur});return}
+    const p=l.split(/\t|\s*\|\s*|\s*=>\s*|\s*->\s*|\s*→\s*|\s*=\s*|\s+[-–—]\s+|\s*[:：]\s*|\s*[,，、;；]\s*/).map(s=>s.trim()).filter(Boolean);
+    if(p.length>=2){
+      const ci=p.findIndex(hasCJ);
+      if(ci>=0){const rest=p.filter((_,k)=>k!=ci),ei=rest.findIndex(s=>!hasCJ(s));if(ei<0)return;const tr=rest[ei];rest.splice(ei,1);out.push({t:p[ci],tr,n:rest.join(', '),ty:cur})}
+      else out.push({t:p[0],tr:p[1],n:p.slice(2).join(', '),ty:cur});
+      return;
+    }
+    let a=l.match(new RegExp('^(['+CJ+'·・]+)\\s+(.+)$'));if(a){out.push({t:a[1],tr:a[2].trim(),n:'',ty:cur});return}
+    a=l.match(new RegExp('^(.+?)\\s+(['+CJ+'·・]+)$'));if(a)out.push({t:a[2],tr:a[1].trim(),n:'',ty:cur});
+  });
+  return out;
+}
+$('#gdet').onclick=()=>{
+  const t=$('#gpaste').value;if(!t.trim())return;
+  if(/^\s*(```(json)?\s*)?\[/.test(t)){try{const n=addPend(jparse(t));return st(n?n+' change(s) proposed below. Check them before applying.':'Nothing new or changed found.')}catch(e){}}
+  const s=splitNotes(t),strict=!s.found&&t.split('\n').length>30;
+  const n=addPend(parseGl(s.found?s.notes:t,strict));
+  st(n?(s.found?'Glossary notes found at the end. ':'')+n+' change(s) proposed below. Check them before applying.':'Nothing new or changed found. Try “Detect with AI” for messy text.');
+};
+const RULES='Reply format: [{"a":"add|modify|remove","t":"original term","tr":"English","ty":"Character|Item|Skill|Place|Organization|Title|Other","g":"male|female|neutral","n":"short note such as role","why":"one short reason for modify and remove"}]. Use "add" for terms that are not in the glossary, "modify" for terms already in the glossary (same original term) that should change or need information merged, and "remove" only for a duplicate or an entry the text says is wrong. Never invent terms that are not in the text. Do not repeat entries that are already correct. For modify, "tr", "g" and "n" must hold the final values.';
+async function aiGl(user,label){
+  await aiRun(label,async()=>{
+    st(label);
+    const r=await gem('You build and maintain translation glossaries. Reply with a JSON array only.',user,true);
+    const n=addPend(jparse(r));st(n?n+' change(s) proposed below. Check them before applying.':'No changes needed.');
+  });
+}
+$('#gai').onclick=()=>{
+  const t=$('#gpaste').value.trim();if(!t)return;const s=splitNotes(t);
+  aiGl('Current glossary:\n'+(glLines(S.gl.slice(0,500))||'(empty)')+'\n\nText'+(s.found?' (the glossary notes at the end of a translated chapter)':'')+':\n'+(s.found?s.notes:t).slice(0,20000)+'\n\n'+RULES,'Asking AI to compare the text with your glossary...');
+};
+$('#gclean').onclick=()=>{
+  if(S.gl.length<2)return st('The glossary is too small to clean.');
+  aiGl('Review this glossary and find problems: duplicate entries for the same thing, one original term with inconsistent English, wrong or missing types, missing or wrong genders, and notes that contradict each other (for example two different genders). Fix them with "modify" (merge the useful information into the entry you keep) and "remove" (the duplicate). Leave correct entries alone. Entries marked LOCKED must never be modified or removed, but you may remove an unlocked duplicate of one.\n\nGlossary:\n'+S.gl.slice(0,400).map(g=>g.t+' => '+g.tr+' | '+(g.ty||'')+' | '+(g.g||'')+' | '+(g.n||'')+(g.v?' | other forms: '+g.v:'')+(g.lk?' | LOCKED':'')).join('\n')+'\n\n'+RULES,'Asking AI to review your glossary...');
+};
+$('#gsave').onclick=()=>{
+  const t=$('#gpaste').value.trim();if(!t)return;
+  const s=splitNotes(t),title=prompt('Chapter title?','Chapter '+(S.ch.length+1));if(!title)return;
+  S.ch.push({title,src:'',out:s.body,done:true});sv();renderCh();
+  st('Saved in Chapters'+(s.found?' without the notes.':'. No notes section was found, so the whole text was saved.'));
+};
+$('#gprm').onclick=()=>{
+  const g=S.gl.length?'Use this glossary. Keep these exact English names, use the gender given for pronouns and follow the address rules:\n'+glLines(S.gl)+'\n\n':'';
+  navigator.clipboard.writeText(g+'After the translated chapter, add a section with the heading GLOSSARY NOTES. List only new terms (not in the glossary above) and terms whose English or details need correcting. Group them under the headings Characters, Items, Skills, Places, Organizations, Titles and Other. Use exactly this format, one term per line:\nOriginal term = English name | gender (characters only) | short note (role, what it does)\nIf an existing entry was wrong, list the corrected line again.').then(()=>st('Prompt copied. Paste it into Gemini, ChatGPT or any AI together with the chapter.'));
+};
+
+/* name changes and versions */
+$('#vdet').onclick=()=>{
+  const i=+$('#vch').value;if(!S.ch[i]||!S.ch[i].out)return st('Choose a translated chapter.');
+  const n=i+1;
+  aiGl('Chapter number: '+n+'\nGlossary:\n'+(glLines(S.gl.slice(0,400),n)||'(empty)')+'\n\nEnglish chapter text:\n'+S.ch[i].out.slice(0,15000)+'\n\nFind characters or terms in the glossary whose name, title or way of being addressed CHANGES inside the story from this chapter onward (a new name, a promotion, a new title, a changed form of address). Do not report normal short forms already listed. Reply with a JSON array only. Format: [{"a":"version","t":"original term exactly as in the glossary","tr":"new English form","from":'+n+',"why":"one short reason"}]. Reply [] if nothing changes.','Looking for name changes in chapter '+n+'...');
+};
+$('#vprm').onclick=()=>{
+  navigator.clipboard.writeText((S.gl.length?'Glossary:\n'+glLines(S.gl.slice(0,400))+'\n\n':'')+'I will paste a chapter (chapter number N). Find characters or terms in the glossary whose name, title or way of being addressed changes inside the story from that chapter onward (a new name, a promotion, a new title, a changed form of address). Reply with a JSON array only. Format: [{"a":"version","t":"original term exactly as in the glossary","tr":"new English form","from":N,"why":"one short reason"}]. Reply [] if nothing changes.\n\nChapter number N = ').then(()=>st('Prompt copied. Add the chapter number and the chapter text, send it to any AI, then paste the answer into “Detect terms”.'));
+};
+
+/* Excel / CSV, copy as prompt */
+const verStr=g=>(g.vers||[]).map(v=>v.from+':'+v.tr).join('; ');
+const parseVers=s=>splitF(s).map(p=>p.match(/^(\d+)\s*[:：]\s*(.+)$/)).filter(Boolean).map(m=>({from:+m[1],tr:m[2].trim()}));
+$('#gxls').onclick=()=>{
+  if(!S.gl.length)return st('The glossary is empty.');
+  const ws=XLSX.utils.aoa_to_sheet([['Original','English','Note','Type','Variants','Locked','Gender','Address rules','Other originals','Wrong forms','Versions (chapter:English)'],...S.gl.map(g=>[g.t,g.tr,g.n||'',g.ty||'',g.v||'',g.lk?'yes':'',g.g||'',g.ad||'',g.at||'',g.w||'',verStr(g)])]),wb=XLSX.utils.book_new();
+  ws['!cols']=[{wch:22},{wch:26},{wch:30},{wch:14},{wch:34},{wch:9},{wch:10},{wch:34},{wch:22},{wch:22},{wch:26}];XLSX.utils.book_append_sheet(wb,ws,'Glossary');XLSX.writeFile(wb,(S.name.replace(/[^\w ]+/g,'')||'glossary')+'-glossary.xlsx');
+};
+$('#gimp').onclick=()=>$('#gfile').click();
+$('#gfile').onchange=async e=>{
+  try{
+    const wb=XLSX.read(await e.target.files[0].arrayBuffer()),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+    if(rows.length&&/original|term|source/i.test(String(rows[0][0]||'')))rows.shift();
+    snap('Import glossary file');let add=0,upd=0;
+    rows.forEach(r=>{const t=String(r[0]||'').trim(),tr=String(r[1]||'').trim();if(t&&tr){upsert({t,tr,n:String(r[2]||'').trim(),ty:typeOf(r[3]),v:String(r[4]||'').trim(),lk:/^(1|y|yes|true|locked)$/i.test(String(r[5]||'').trim()),g:gOf(r[6]),ad:String(r[7]||'').trim(),at:String(r[8]||'').trim(),w:String(r[9]||'').trim(),vers:parseVers(r[10])})?add++:upd++}});
+    sv();renderGl();st(add+' added, '+upd+' updated.');
+  }catch(err){st('Could not read that file: '+err.message)}
+  e.target.value='';
+};
+$('#gcp').onclick=()=>{
+  if(!S.gl.length)return st('The glossary is empty.');
+  navigator.clipboard.writeText('Use this glossary when translating. Always use these exact English names, use the gender given for pronouns and follow the address rules:\n'+glLines(S.gl)).then(()=>st('Glossary copied as a prompt. Paste it into any AI chat.'));
+};
+
+/* audit: check chapters against the glossary */
+const KIND={wrong:'Wrong form',guess:'Possible misspelling',missing:'Missing term',ai:'AI check'};
+function dist(a,b,max){
+  if(Math.abs(a.length-b.length)>max)return max+1;
+  let p=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){const c=[i];let mn=i;for(let j=1;j<=b.length;j++){const v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]==b[j-1]?0:1));c.push(v);if(v<mn)mn=v}if(mn>max)return max+1;p=c}
+  return p[b.length];
+}
+function scanLocal(i){
+  const c=S.ch[i],n=i+1,res=[],P=paras(c.out),low=c.out.toLowerCase();
+  const info=S.gl.filter(g=>g.tr).map(g=>({g,eff:effTr(g,n),acc:accept(g,n).map(s=>s.toLowerCase()),wr:wrongs(g,n)}));
+  const all=new Set();S.gl.forEach(g=>{[g.tr,...(g.vers||[]).map(v=>v.tr),...accept(g,n)].forEach(s=>s&&all.add(s.toLowerCase()))});
+  const wl=info.filter(x=>x.wr.length),bk=[null,new Map(),new Map(),new Map(),new Map()];
+  info.forEach(x=>{const k=x.eff.split(/\s+/).length;if(k>4||x.eff.length<5)return;const f=x.eff[0].toLowerCase(),m=bk[k];if(!m.has(f))m.set(f,[]);m.get(f).push(x)});
+  const fixed=new Set();
+  P.forEach(p=>{
+    let np=p;const why=[],rp=[];let guess=false;
+    wl.forEach(x=>x.wr.forEach(w=>{if(wordRe(w,'i').test(np)){np=np.replace(wordRe(w,'gi'),()=>x.eff);why.push('“'+w+'” → “'+x.eff+'”');fixed.add(x.eff)}}));
+    const T=[],re=/[A-Za-z][A-Za-z'’-]*/g;let m;while((m=re.exec(np)))T.push({i:m.index,e:m.index+m[0].length});
+    const seen=new Set();
+    for(let j=0;j<T.length;j++)for(let k=1;k<=4&&j+k<=T.length;k++){
+      if(k>1&&np.slice(T[j+k-2].e,T[j+k-1].i)!=' ')break;
+      const cand=np.slice(T[j].i,T[j+k-1].e);
+      if(!/^[A-Z]/.test(cand)||seen.has(cand))continue;
+      const lc=cand.toLowerCase();if(all.has(lc))continue;
+      const b=bk[k].get(lc[0]);if(!b)continue;
+      for(const x of b){const L=x.eff.length,thr=L<=7?1:L<=12?2:3;if(Math.abs(L-cand.length)>thr)continue;const d=dist(lc,x.eff.toLowerCase(),thr);if(d>0&&d<=thr){seen.add(cand);rp.push([cand,x.eff]);why.push('looks like “'+x.eff+'”: “'+cand+'” → “'+x.eff+'”');guess=true;fixed.add(x.eff);break}}
+    }
+    rp.forEach(([f,r])=>{np=np.replace(wordRe(f,'g'),()=>r)});
+    if(np!=p)res.push({ch:i,kind:guess?'guess':'wrong',ctx:p,fix:np,why:why.join('; ')});
+  });
+  if(c.src)info.forEach(x=>{
+    if(!srcForms(x.g).some(f=>c.src.includes(f)))return;
+    if(x.acc.some(a=>low.includes(a))||fixed.has(x.eff))return;
+    res.push({ch:i,kind:'missing',why:'The original has “'+x.g.t+'” but “'+x.eff+'” was not found in the English. Run the AI scan to find and fix it.'});
+  });
+  return res;
+}
+async function scanAI(i){
+  const c=S.ch[i],n=i+1,P=paras(c.out),lo=c.out.toLowerCase();
+  const rel=c.src?S.gl.filter(g=>srcForms(g).some(f=>c.src.includes(f))||accept(g,n).some(f=>lo.includes(f.toLowerCase()))):S.gl.slice(0,300);
+  if(!rel.length||!P.length)return;
+  const groups=[];let cur=[],len=0;
+  P.forEach((p,k)=>{if(cur.length&&len+p.length>6000){groups.push(cur);cur=[];len=0}cur.push(k);len+=p.length});if(cur.length)groups.push(cur);
+  for(let gi=0;gi<groups.length;gi++){
+    if(stopFlag)throw new Error('stopped');
+    const r=await gem('You are a careful copy-editor who enforces a glossary on an English webnovel translation. Reply with a JSON array only.',
+     'Glossary for chapter '+n+':\n'+glLines(rel,n)+'\n\nParagraphs (numbered):\n'+groups[gi].map(k=>'['+(k+1)+'] '+P[k]).join('\n')+'\n\nFind paragraphs where: (1) a glossary name or term is written differently from the glossary (misspelled, translated another way, or a different name); (2) he/she/his/her does not match the gender given for a character; (3) a character is addressed against the address rules. Change ONLY the wrong words. Do not improve style and do not rewrite anything else. For each paragraph that needs a change reply with {"p":paragraph number,"fix":"the full corrected paragraph","why":"short reason"}. Include only paragraphs that need a change. Reply [] if all is fine.',true);
+    let arr=[];try{arr=jparse(r)}catch(e){}
+    arr.forEach(x=>{
+      const ctx=P[(+x.p)-1];if(!ctx||!x.fix||x.fix==ctx)return;
+      const fx=String(x.fix).trim();if(fx.length>ctx.length*1.4+20||fx.length<ctx.length*0.6-20)return;
+      ISS.push({ch:i,kind:'ai',ctx,fix:fx,why:x.why?String(x.why):'Glossary mismatch'});
+    });
+    if(gi<groups.length-1)await sleep(C.gap*1000);
+  }
+}
+async function termsFromEn(i){
+  const c=S.ch[i],n=i+1,known=S.gl.map(g=>effTr(g,n)).join('; ').slice(0,6000);
+  const r=await gem('You extract names and recurring terms for a translation glossary. Reply with a JSON array only.','English chapter:\n'+c.out.slice(0,12000)+'\n\nAlready in the glossary (skip these): '+known+'\n\nList character names, places, sects, titles, skills, items and special terms used in this chapter that are NOT in the glossary. The original-language text is unknown, so use the English name as "t" too. For characters add the gender judged from the pronouns used.\nFormat: [{"t":"English name","tr":"English name","ty":"Character|Item|Skill|Place|Organization|Title|Other","g":"male|female|neutral","n":"short note"}]',true);
+  return addPend(jparse(r).filter(x=>x&&x.tr&&!S.gl.some(g=>accept(g,n).some(a=>a.toLowerCase()==String(x.tr).toLowerCase()))));
+}
+function renderAudit(){
+  const cur=$('#asc').value;
+  $('#asc').innerHTML='<option value="all">All translated chapters</option>'+S.ch.map((c,i)=>c.out?'<option value="'+i+'">'+(i+1)+'. '+esc(c.title)+'</option>':'').join('');
+  if([...$('#asc').options].some(o=>o.value==cur))$('#asc').value=cur;
+  renderIss();
+}
+const scope=()=>{const v=$('#asc').value;return v=='all'||v===''?S.ch.map((c,i)=>c.out?i:-1).filter(i=>i>=0):[+v]};
+function diffHtml(a,b){
+  let p=0;const m=Math.min(a.length,b.length);while(p<m&&a[p]==b[p])p++;
+  let s=0;while(s<m-p&&a[a.length-1-s]==b[b.length-1-s])s++;
+  const pre0=a.slice(0,p),suf0=a.slice(a.length-s),pre=pre0.length>70?'…'+pre0.slice(-70):pre0,suf=suf0.length>70?suf0.slice(0,70)+'…':suf0;
+  return '<div>'+esc(pre)+'<del>'+esc(a.slice(p,a.length-s))+'</del>'+esc(suf)+'</div><div>'+esc(pre)+'<ins>'+esc(b.slice(p,b.length-s))+'</ins>'+esc(suf)+'</div>';
+}
+function renderIss(){
+  const fx=ISS.filter(x=>x.fix).length;
+  $('#asum').innerHTML=ISS.length?'<small>'+ISS.length+' finding(s), '+fx+' with a ready fix.</small>':'<small>No findings. Run a scan.</small>';
+  $('#ares').hidden=!ISS.length;
+  $('#ares').innerHTML=ISS.map((x,k)=>'<div class="iss"><div><span class="tag">Chapter '+(x.ch+1)+'</span> <span class="tag '+(x.kind=='guess'||x.kind=='missing'?'warn':'ok')+'">'+KIND[x.kind]+'</span> <small>'+esc(x.why)+'</small></div>'+(x.fix?'<div class="diff">'+diffHtml(x.ctx,x.fix)+'</div>':'')+'<div class="bar" style="margin:6px 0 0">'+(x.fix?'<button class="b" data-ap="'+k+'">Apply fix</button>':'')+'<button class="g" data-ig="'+k+'">Dismiss</button></div></div>').join('');
+}
+function applyIss(x){const c=S.ch[x.ch];if(!c||!x.fix||!c.out.includes(x.ctx))return false;c.out=c.out.replace(x.ctx,()=>x.fix);return true}
+$('#ares').onclick=e=>{
+  const d=e.target.dataset;
+  if(d.ap!==undefined){const x=ISS[+d.ap];snap('Fix in chapter '+(x.ch+1),{gl:false,ch:[x.ch]});if(applyIss(x)){ISS.splice(+d.ap,1);sv();renderIss();st('Fixed.')}else{x.why='The text has changed since the scan. Scan again.';H.pop();saveH();renderHist();renderIss()}}
+  else if(d.ig!==undefined){ISS.splice(+d.ig,1);renderIss()}
+};
+function applyMany(kinds){
+  const L=ISS.filter(x=>x.fix&&kinds.includes(x.kind));if(!L.length)return st('Nothing to apply.');
+  snap('Audit: apply '+L.length+' fix(es)',{gl:false,ch:[...new Set(L.map(x=>x.ch))]});
+  let ok=0;L.forEach(x=>{if(applyIss(x)){ok++;ISS.splice(ISS.indexOf(x),1)}});sv();renderIss();st(ok+' fix(es) applied'+(ok<L.length?', '+(L.length-ok)+' skipped because the text had changed':'')+'. You can undo this.');
+}
+$('#aapp').onclick=()=>applyMany(['wrong','ai']);
+$('#aapp2').onclick=()=>applyMany(['wrong','ai','guess']);
+$('#aclr').onclick=()=>{ISS=[];renderIss()};
+$('#aloc').onclick=()=>{
+  const L=scope();if(!L.length)return st('No translated chapters to check.');
+  ISS=ISS.filter(x=>!(L.includes(x.ch)&&x.kind!='ai'));
+  L.forEach(i=>ISS.push(...scanLocal(i)));ISS.sort((a,b)=>a.ch-b.ch);renderIss();
+  st('Scan finished: '+ISS.filter(x=>L.includes(x.ch)&&x.kind!='ai').length+' finding(s) in '+L.length+' chapter(s).');
+};
+$('#aai').onclick=()=>{
+  const L=scope();if(!L.length)return st('No translated chapters to check.');
+  ISS=ISS.filter(x=>!(L.includes(x.ch)&&x.kind=='ai'));
+  aiRun('AI scan',async()=>{for(let k=0;k<L.length;k++){st('AI scan: chapter '+(L[k]+1)+' ('+(k+1)+' of '+L.length+')...');await scanAI(L[k]);ISS.sort((a,b)=>a.ch-b.ch);renderIss();if(k<L.length-1)await sleep(C.gap*1000)}});
+};
+$('#aterms').onclick=()=>{
+  const L=scope();if(!L.length)return st('No translated chapters to check.');
+  aiRun('Term search',async()=>{let n=0;for(let k=0;k<L.length;k++){st('Looking for new terms in chapter '+(L[k]+1)+' ('+(k+1)+' of '+L.length+')...');n+=await termsFromEn(L[k]);if(k<L.length-1)await sleep(C.gap*1000)}st(n+' new term(s) proposed. Open the Glossary tab to check them.')});
+};
+
+/* backup */
+const bkN=()=>R.novels.reduce((a,n)=>a+n.ch.length+n.ch.filter(c=>c.done).length,0);
+const dl2=(a,b)=>{C.lastBk=Date.now();C.bkN=bkN();C.bkSnooze=0;sv();dl(a,b)};
+function chkBk(){
+  const b=$('#bkban');if(!b)return;
+  const n=bkN(),last=C.lastBk||0,days=last?Math.floor((Date.now()-last)/864e5):0,dn=n-(C.bkN||0);
+  const why=n<3?'':!last?'You have never made a backup.':days>=7?'Last backup was '+days+' days ago.':dn>=20?dn+' chapters added or translated since the last backup.':'';
+  if(!why||(C.bkSnooze&&Date.now()<C.bkSnooze)){b.hidden=true;return}
+  b.hidden=false;b.innerHTML='<b>Backup reminder:</b> '+esc(why)+' <button class="b" id="bkgo">Back up now</button> <button class="g" id="bksn">Remind me tomorrow</button>';
+  $('#bkgo').onclick=()=>$('#bkx').click();$('#bksn').onclick=()=>{C.bkSnooze=Date.now()+864e5;sv()};
+}
+setInterval(()=>{try{chkBk()}catch(e){}},60000);
+function mergeBk(bn){
+  snap('Merge backup');let nn=0,tg=0;
+  bn.forEach(b=>{const l=R.novels.find(x=>x.id==b.id);norm(b);if(!l){R.novels.push(b);nn++;return}b.gl.forEach(g=>{if(!l.gl.some(x=>srcForms(x).includes(g.t))){l.gl.push(g);tg++}})});
+  sv();useNovel(S.id);st('Merged: '+nn+' new novel(s), '+tg+' new glossary term(s) added. Nothing was replaced.');
+}
+const dl=(name,blob)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+$('#bkx').onclick=()=>dl2('translator-backup-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify({v:2,root:R,settings:Object.assign({},C,{key:''})})],{type:'application/json'}));
+$('#bki').onclick=()=>$('#bkf').click();
+$('#bkf').onchange=async e=>{
+  try{
+    const d=JSON.parse(await e.target.files[0].text()),k=C.key;
+    if(d.root&&Array.isArray(d.root.novels)){
+      {const bn=d.root.novels,cc=a=>a.reduce((x,n)=>x+(n.ch||[]).length,0),gc=a=>a.reduce((x,n)=>x+(n.gl||[]).length,0);
+        if(!confirm('This backup has '+bn.length+' novel(s), '+cc(bn)+' chapters, '+gc(bn)+' glossary terms.\nThis browser now has '+R.novels.length+' novel(s), '+cc(R.novels)+' chapters, '+gc(R.novels)+' glossary terms.\n\nOK = REPLACE everything here with the backup.\nCancel = more options (merge).')){
+          if(confirm('MERGE instead?\nNovels not found here are added. For novels you already have, only missing glossary terms are added. Chapters and settings stay as they are.'))mergeBk(bn);
+          e.target.value='';return}}
+      R=d.root;if(!R.novels.length)R.novels.push(newNovel('Novel 1'));R.novels.forEach(norm);
+    }else if(d.state&&Array.isArray(d.state.ch)&&Array.isArray(d.state.gl)){
+      if(!confirm('Replace the chapters and glossary of “'+S.name+'” with this backup?')){e.target.value='';return}
+      S.ch=d.state.ch;S.gl=d.state.gl;S.pend=d.state.pend||[];norm(S);
+    }else throw new Error('This is not a backup file.');
+    Object.assign(C,d.settings||{},{key:k});
+    ['model','src','gap','chunk','extra'].forEach(x=>$('#'+x).value=C[x]);['ctx','sug','pre','fast'].forEach(x=>$('#'+x).checked=C[x]);
+    C.lastBk=Date.now();C.bkN=bkN();useNovel(R.cur);st('Backup restored.');
+  }catch(err){st('Could not restore: '+err.message)}
+  e.target.value='';
+};
+
+/* character card */
+function showCard(i){
+  const g=S.gl[i],b=$('#ccard');if(!g)return;
+  const low=x=>String(x||'').toLowerCase(),tl=[{from:1,tr:g.tr},...(g.vers||[])];
+  const rel=S.gl.filter(x=>x!==g&&x.ad&&(low(x.ad).includes(low(g.tr))||x.ad.includes(g.t)));
+  const row=(l,v)=>v?'<div style="margin-top:4px"><span class="tag">'+l+'</span> '+v+'</div>':'';
+  b.hidden=false;
+  b.innerHTML='<button class="g" id="ccx" style="float:right">Close</button><b>'+esc(g.tr)+'</b> <span class="tag">'+esc(g.t)+' · '+(g.ty||'no type')+' · '+(g.g||'gender not set')+(g.lk?' · locked':'')+'</span>'
+   +row('Note',esc(g.n))+row('First appearance',esc(appear(g)))+row('Other valid forms',esc(g.v))+row('Wrong forms',esc(g.w))+row('Other spellings of the original',esc(g.at))
+   +row('Address rules (this character)',esc(g.ad))
+   +row('Mentioned in other characters’ rules',rel.map(x=>esc(x.tr)+': '+esc(x.ad)).join('<br>'))
+   +'<div style="margin-top:6px"><span class="tag">Name timeline</span></div>'+tl.map(v=>'<div>From chapter '+v.from+': <b>'+esc(v.tr)+'</b></div>').join('')
+   +'<div class="tag" style="margin-top:6px">Edit these fields with “More” on the entry.</div>';
+  $('#ccx').onclick=()=>{b.hidden=true};b.scrollIntoView({block:'nearest'});
+}
+$('#gl').addEventListener('click',e=>{const k=e.target.dataset.cc;if(k!==undefined)showCard(+k)});
+
+/* pronoun check */
+const PM=/\b(he|him|his|himself)\b/i,PW=/\b(she|her|hers|herself)\b/i;
+function pronounScan(i){
+  const c=S.ch[i],n=i+1,out=[];
+  const chars=S.gl.filter(g=>g.ty=='Character'&&(g.g=='male'||g.g=='female')).map(g=>{const e=effTr(g,n),fw=e.split(/\s+/)[0];return {g,e,names:[...new Set([e,...(fw.length>=3?[fw]:[])])]}});
+  paras(c.out).forEach((p,k)=>{
+    const q=p.replace(/“[^”]*”|"[^"]*"|‘[^’]*’/g,' '),hit=chars.filter(x=>x.names.some(nm=>wordRe(nm).test(q)));
+    if(!hit.length)return;const gs=new Set(hit.map(x=>x.g.g));if(gs.size!=1)return;
+    const g0=[...gs][0],m=q.match(g0=='male'?PW:PM);if(!m)return;
+    out.push({ch:i,p:k+1,names:hit.map(x=>x.e).join(', '),g:g0,pr:m[0],ctx:p});
+  });
+  return out;
+}
+$('#prn').onclick=async()=>{
+  const o=$('#prnr');
+  if(!S.gl.some(g=>g.ty=='Character'&&(g.g=='male'||g.g=='female')))return o.innerHTML='<span class="tag warn">No Character entries with a gender yet. Set gender in the Glossary first.</span>';
+  const L=S.ch.map((c,i)=>i).filter(i=>S.ch[i].done&&S.ch[i].out),R2=[];
+  for(let k=0;k<L.length;k++){R2.push(...pronounScan(L[k]));if(k%10==9){st('Pronoun check '+(k+1)+' of '+L.length+'...');await sleep(0)}}
+  st('Pronoun check finished: '+R2.length+' paragraph(s) to look at.');
+  o.innerHTML='<div class="tag" style="margin:8px 0">'+L.length+' chapters checked · <b class="'+(R2.length?'warn':'')+'">'+R2.length+' hints</b></div>'
+   +R2.slice(0,150).map(x=>'<div class="iss"><div class="tag">Chapter '+(x.ch+1)+', paragraph '+x.p+' · '+esc(x.names)+' ('+x.g+') but “'+esc(x.pr)+'” is used</div><div class="diff">'+esc(x.ctx.length>260?x.ctx.slice(0,260)+'…':x.ctx)+'</div><button class="g" data-pr="'+x.ch+'">Open chapter</button></div>').join('')
+   +(R2.length>150?'<small>Showing the first 150.</small>':'')+(R2.length?'':'<div class="tag ok">No mismatches found.</div>');
+  o.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>openRead(+b.dataset.pr));
+};
+
+/* glossary share pack */
+$('#gpx').onclick=()=>{
+  if(!S.gl.length)return st('The glossary is empty.');
+  const o={pack:'lorekeeper-glossary',v:1,novel:S.name,src:C.src,made:new Date().toISOString().slice(0,10),terms:S.gl.map(g=>({t:g.t,tr:g.tr,n:g.n||'',ty:g.ty||'',g:g.g||'',v:g.v||'',ad:g.ad||'',at:g.at||'',w:g.w||'',vers:g.vers||[],lk:!!g.lk}))};
+  dl((S.name.replace(/[^\w ]+/g,'')||'glossary')+'-glossary-pack.json',new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));
+  st('Glossary pack saved: '+o.terms.length+' terms with types, genders, address rules and versions.');
+};
+$('#gpi').onclick=()=>$('#gpf').click();
+$('#gpf').onchange=async e=>{
+  try{
+    const d=JSON.parse(await e.target.files[0].text());
+    if(d.pack!='lorekeeper-glossary'||!Array.isArray(d.terms))throw new Error('This is not a glossary pack.');
+    const nw=[],same=[],diff=[];
+    d.terms.forEach(x=>{if(!x||!x.t||!x.tr)return;const g=S.gl.find(y=>srcForms(y).includes(x.t));if(!g)nw.push(x);else if(g.tr==x.tr)same.push(x);else diff.push([g,x])});
+    const lk=diff.filter(([g])=>g.lk).length;
+    if(!confirm('Pack from “'+(d.novel||'?')+'” into “'+S.name+'”:\n• '+nw.length+' new terms\n• '+same.length+' already the same\n• '+diff.length+' with a different English form'+(lk?' ('+lk+' locked, never changed)':'')+'\n\nOK = continue, Cancel = stop.')){e.target.value='';return}
+    const over=diff.length?confirm('Overwrite your '+diff.length+' different English forms with the pack’s?\nOK = overwrite (locked ones stay).\nCancel = keep mine, add only new terms.'):false;
+    snap('Import glossary pack');nw.forEach(x=>upsert(x));if(over)diff.forEach(([g,x])=>{if(!g.lk)upsert(x)});
+    sv();renderGl();st(nw.length+' term(s) added'+(over?', '+diff.filter(([g])=>!g.lk).length+' overwritten':'')+'. Undo is available.');
+  }catch(err){st('Could not read that pack: '+err.message)}
+  e.target.value='';
+};
+
+/* export */
+const doneCh=()=>S.ch.filter(c=>c.done&&c.out);
+$('#dtxt').onclick=()=>{const d=doneCh();if(!d.length)return st('Nothing translated yet.');dl('translation.txt',new Blob([d.map(c=>c.title+'\n\n'+c.out).join('\n\n\n')],{type:'text/plain'}))};
+$('#depub').onclick=async()=>{
+  const d=doneCh();if(!d.length)return st('Nothing translated yet.');
+  const book=prompt('Book title?',S.name||'Translated novel');if(!book)return;
+  const z=new JSZip(),X='<?xml version="1.0" encoding="utf-8"?>\n';
+  z.file('mimetype','application/epub+zip',{compression:'STORE'});
+  z.file('META-INF/container.xml',X+'<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
+  d.forEach((c,i)=>z.file('OEBPS/c'+i+'.xhtml',X+'<html xmlns="http://www.w3.org/1999/xhtml"><head><title>'+esc(c.title)+'</title></head><body><h2>'+esc(c.title)+'</h2>'+c.out.split(/\n+/).map(p=>'<p>'+esc(p)+'</p>').join('')+'</body></html>'));
+  z.file('OEBPS/nav.xhtml',X+'<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><ol>'+d.map((c,i)=>'<li><a href="c'+i+'.xhtml">'+esc(c.title)+'</a></li>').join('')+'</ol></nav></body></html>');
+  z.file('OEBPS/content.opf',X+'<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">nt-'+Date.now()+'</dc:identifier><dc:title>'+esc(book)+'</dc:title><dc:language>en</dc:language><meta property="dcterms:modified">'+new Date().toISOString().slice(0,19)+'Z</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>'+d.map((c,i)=>'<item id="c'+i+'" href="c'+i+'.xhtml" media-type="application/xhtml+xml"/>').join('')+'</manifest><spine>'+d.map((c,i)=>'<itemref idref="c'+i+'"/>').join('')+'</spine></package>');
+  dl(book.replace(/[^\w ]+/g,'')+'.epub',await z.generateAsync({type:'blob',mimeType:'application/epub+zip'}));
+};
+
+/* match check: original vs translation against the glossary, free */
+let MR=null,MUNDO=[];
+const isCJ=s=>new RegExp('['+CJ+']').test(s);
+const uRe=(f,fl,sf)=>{const s=escRe(f).replace(/\s+/g,'\\s+').replace(/['’]/g,"['’]");return new RegExp(isCJ(f)?s:'(?<![\\p{L}\\p{N}])'+s+(sf?"(?:['’]?s|es)?":'')+'(?![\\p{L}\\p{N}])',(fl||'')+'iu')};
+function spansOf(text,forms){
+  const low=text.toLowerCase(),all=[];
+  forms.forEach(o=>{const f=o.f;if(!f||(low.indexOf(f.toLowerCase())<0&&!/\s|['’]/.test(f)))return;
+    const re=uRe(f,'g',!isCJ(f));let m;while((m=re.exec(text))){all.push({s:m.index,e:m.index+m[0].length,gi:o.gi,k:o.k,f});if(!m[0].length)re.lastIndex++}});
+  all.sort((a,b)=>(b.e-b.s)-(a.e-a.s)||a.s-b.s);const taken=[];
+  all.forEach(x=>{if(!taken.some(t=>x.s<t.e&&x.e>t.s))taken.push(x)});
+  return taken.sort((a,b)=>a.s-b.s);
+}
+const pOff=t=>{let p=0;const o=[];t.split('\n').forEach(l=>{if(l.trim())o.push({s:p,e:p+l.length});p+=l.length+1});return o};
+const pIdx=(P,x)=>{const i=P.findIndex(p=>x<=p.e);return i<0?P.length-1:i};
+const pAl=(i,PR,PT)=>{const j=PR.length==PT.length?i:pIdx(PT,(PR[i].s+PR[i].e)/2/PR[PR.length-1].e*PT[PT.length-1].e);return [Math.max(0,j-1),Math.min(PT.length-1,j+1),j]};
+const STOP=new Set('the a an he she they it his her their its i we you but and as when then this that there what who how if so or in on at to of for with from by one after before while now just not no yes oh well however though although once even still here why where which these those some all my your our me him them us is was be been are were do did have had suddenly meanwhile finally perhaps maybe'.split(' '));
+const stp=w=>STOP.has(w.toLowerCase());
+function caps(t){
+  const re=/\p{Lu}[\p{L}-]*/gu,T=[];let m;while((m=re.exec(t)))T.push({s:m.index,e:m.index+m[0].length,w:m[0]});
+  const out=new Map();
+  for(let j=0;j<T.length;j++)for(let k=1;k<=4&&j+k<=T.length;k++){
+    if(k>1&&t.slice(T[j+k-2].e,T[j+k-1].s)!=' ')break;
+    if(stp(T[j].w)||stp(T[j+k-1].w))continue;
+    const s=t.slice(T[j].s,T[j+k-1].e);if(!out.has(s))out.set(s,[]);out.get(s).push(T[j].s);
+  }
+  return out;
+}
+const sentStart=(t,p)=>{const b=t.slice(Math.max(0,p-4),p).replace(/[\s"“‘'(\[]+$/,'');return !b||/[.!?…]$/.test(b)};
+const MLAB={ok:['Matches','ok'],mixed:['Mixed forms','warn'],wrong:['Wrong form','bad'],fuzzy:['Possible misspelling','warn'],short:['Short form only','warn'],other:['Translated differently?','warn'],missing:['Not found in translation','warn'],extra:['Not in the original',''],found:['Found in original','ok']};
+const MORD=['wrong','mixed','fuzzy','other','missing','short','extra','ok','found'];
+function mrun(){
+  const raw=$('#mraw').value.replace(/\r/g,'').trim(),tr=$('#mtr').value.replace(/\r/g,'').trim(),n=+$('#mnum').value||null;
+  if(!raw&&!tr)return st('Paste the original, the translation, or both.');
+  if(!S.gl.length)return st('The glossary is empty.');
+  const hasR=!!raw,hasT=!!tr,fzOn=$('#mfz').checked,rf=[],tf=[],all=new Set();
+  S.gl.forEach((g,gi)=>{
+    srcForms(g).forEach(f=>rf.push({gi,f,k:'s'}));if(!g.tr)return;
+    const e=effTr(g,n);tf.push({gi,f:e,k:'ok'});accept(g,n).forEach(a=>{if(a!=e)tf.push({gi,f:a,k:'ok'})});wrongs(g,n).forEach(w=>tf.push({gi,f:w,k:'bad'}));
+  });
+  tf.forEach(o=>all.add(o.f.toLowerCase()));const knownL=[...all];
+  const grp=a=>{const m=new Map();a.forEach(x=>{if(!m.has(x.gi))m.set(x.gi,[]);m.get(x.gi).push(x)});return m};
+  const cnt=a=>{const m={};a.forEach(x=>{const k=x.f.toLowerCase();m[k]=m[k]||{f:x.f,c:0};m[k].c++});return Object.values(m)};
+  const rs=hasR?spansOf(raw,rf):[],ts=hasT?spansOf(tr,tf):[],RB=grp(rs),TB=grp(ts);
+  const PR=hasR?pOff(raw):[],PT=hasT?pOff(tr):[],pool=hasT?caps(tr):new Map();
+  const inTs=p=>ts.some(x=>p>=x.s&&p<x.e);
+  const pc=[],pcaps=j=>pc[j]||(pc[j]=caps(tr.slice(PT[j].s,PT[j].e)));let dfM=null;
+  const df=()=>{if(!dfM){dfM=new Map();PT.forEach((_,j)=>pcaps(j).forEach((_2,c)=>dfM.set(c,(dfM.get(c)||0)+1)))}return dfM};
+  const rows=[],fzAll=new Set();
+  S.gl.forEach((g,gi)=>{
+    const E=g.tr?effTr(g,n):'',rr=RB.get(gi)||[],k=rr.length,tt=TB.get(gi)||[];
+    const okS=tt.filter(x=>x.k=='ok'),m=okS.length,vr=cnt(okS.filter(x=>x.f!=E)),b=cnt(tt.filter(x=>x.k=='bad'));
+    if(hasR&&!k&&!(hasT&&E&&(m||b.length)&&(/^\p{Lu}/u.test(E)||E.includes(' ')||b.length)))return;
+    if(!hasT){if(k)rows.push({gi,E,k,m:0,vr:[],cands:[],s:'found'});return}
+    let fz=[];
+    if(fzOn&&E&&(k||!hasR)&&/^\p{Lu}/u.test(E)&&E.length>=4&&E.split(/\s+/).length<=4){
+      const L=E.length,thr=L<=7?1:L<=12?2:3,kk=E.split(/\s+/).length,le=E.toLowerCase();
+      pool.forEach((pos,s)=>{const ls=s.toLowerCase();if(all.has(ls)||Math.abs(s.length-L)>thr||s.split(' ').length!=kk)return;const c=pos.filter(p=>!inTs(p)).length;if(!c)return;const d=dist(ls,le,thr);if(d>0&&d<=thr){fz.push({f:s,c});fzAll.add(s)}});
+    }
+    const sh=[];
+    if(k&&!m&&!b.length&&!fz.length&&E.includes(' '))E.split(/\s+/).filter(w=>w.length>=3&&!stp(w)).forEach(w=>{const re=uRe(w,'g',true);let c=0,x;while((x=re.exec(tr)))if(!inTs(x.index))c++;if(c)sh.push({f:w,c})});
+    const ph=[];
+    if(sh.length)pool.forEach((pos,s)=>{if(!s.includes(' ')||all.has(s.toLowerCase()))return;const c=pos.filter(p=>!inTs(p)).length;if(c&&sh.some(x=>s.toLowerCase().split(' ').includes(x.f.toLowerCase())))ph.push({f:s,c})});
+    ph.sort((a,b)=>b.f.length-a.f.length);const phk=ph.filter((x,i)=>!ph.slice(0,i).some(y=>y.f.includes(x.f)));
+    let s=null;
+    if(k||!hasR)s=m&&!b.length&&!fz.length?'ok':m?'mixed':b.length?'wrong':fz.length?'fuzzy':ph.length?'other':sh.length?'short':null;
+    else s=b.length&&!m?'wrong':'extra';
+    if(s==null&&!hasR)return;
+    const row={gi,E,k,m,vr,s,cands:[...b.map(x=>({...x,t:'b'})),...fz.map(x=>({...x,t:'z'})),...(s=='short'?sh.map(x=>({...x,t:'s'})):[]),...(s=='other'&&phk.length?phk.slice(0,3).map(x=>({f:x.f,c:x.c,t:'g',cf:'shares words with the glossary name'})):[])]};
+    if(s==null){
+      const ps=[...new Set(rr.map(x=>pIdx(PR,x.s)))];
+      if(/^\p{Lu}/u.test(E)){
+        const hit=new Map();
+        ps.forEach(i=>{const [a,z]=pAl(i,PR,PT),seen=new Set();for(let j=a;j<=z;j++)pcaps(j).forEach((_,c)=>seen.add(c));seen.forEach(c=>{const lc=c.toLowerCase();if(!knownL.some(q=>q.includes(lc)))hit.set(c,(hit.get(c)||0)+1)})});
+        const D=df();
+        [...hit].map(([c,h])=>({f:c,h,d:D.get(c)||1,sc:h/Math.sqrt(D.get(c)||1)})).sort((a,b)=>b.sc-a.sc||a.d-b.d).slice(0,ps.length>1?2:3)
+         .forEach(x=>row.cands.push({f:x.f,c:x.h,t:'g',cf:ps.length>1&&x.h==ps.length&&x.d<=x.h+1?'likely':'maybe'}));
+      }
+      row.s=row.cands.length?'other':'missing';
+    }
+    if(row.s!='ok'&&k&&hasT&&PT.length){
+      const x=rr[0],j=pAl(pIdx(PR,x.s),PR,PT)[2];
+      row.rc=esc(raw.slice(Math.max(0,x.s-50),x.s))+'<b>'+esc(raw.slice(x.s,x.e))+'</b>'+esc(raw.slice(x.e,x.e+50));
+      row.tc=esc(tr.slice(PT[j].s,PT[j].e).slice(0,260));
+    }
+    rows.push(row);
+  });
+  rows.sort((a,b)=>MORD.indexOf(a.s)-MORD.indexOf(b.s)||b.k-a.k);
+  let unk=[];
+  if(hasT&&$('#mun').checked){
+    const arr=[];
+    pool.forEach((pos,s)=>{if(all.has(s.toLowerCase())||fzAll.has(s))return;const o=pos.filter(p=>!inTs(p));if(o.length<2)return;if(o.filter(p=>!sentStart(tr,p)).length<(s.includes(' ')?1:2))return;arr.push({f:s,c:o.length})});
+    arr.sort((a,b)=>b.f.length-a.f.length);const keep=[];
+    arr.forEach(x=>{if(!keep.some(t=>t.f.includes(x.f)&&t.c>=x.c*0.7))keep.push(x)});
+    unk=keep.sort((a,b)=>b.c-a.c).slice(0,40);
+  }
+  MR={rows,unk,raw,tr,n,hasR,hasT};renderMatch();
+  const pr=rows.filter(r=>!['ok','found'].includes(r.s)).length;
+  st('Match check finished: '+rows.length+' glossary term(s) found'+(hasT?', '+pr+' need a look':'')+'.');
+}
+function renderMatch(){
+  const M=MR,box=$('#mres');if(!M){box.hidden=true;return}box.hidden=false;
+  const cn={};M.rows.forEach(r=>cn[r.s]=(cn[r.s]||0)+1);
+  const all=$('#mflt').value=='all',L=M.rows.map((r,i)=>[r,i]).filter(([r])=>all||!['ok','found'].includes(r.s));
+  const CT={b:'known wrong form',z:'looks like a misspelling',g:'name near the same place',s:'short form of the name'};
+  const btn=(ri,ci,a,l,cl)=>'<button class="'+(cl||'g')+'" data-ma="'+ri+':'+ci+':'+a+'">'+l+'</button>';
+  let h='<div class="card"><b>Result</b> <small>'+(M.rows.length?M.rows.length+' glossary term(s) found: '+MORD.filter(s=>cn[s]).map(s=>cn[s]+' '+MLAB[s][0].toLowerCase()).join(' · '):'No glossary term found in the text. Check that the glossary belongs to this novel.')+'</small>'
+   +(M.hasR&&M.hasT?'<br><small>“Not found” can be harmless: the name may have been replaced by he/she or left out in the translation.</small>':'')+'</div>';
+  h+='<div class="card">'+(L.length?L.map(([r,i])=>{
+    const g=S.gl[r.gi],lb=MLAB[r.s];
+    return '<div class="iss"><div><b>'+esc(g.t)+'</b> → <b>'+esc(r.E)+'</b> <span class="tag '+lb[1]+'">'+lb[0]+'</span> <small>'+(M.hasR?'original '+r.k+'×':'')+(M.hasT?(M.hasR?' · ':'')+'translation '+r.m+'×':'')+'</small></div>'
+     +(r.vr.length?'<small>Accepted variants used: '+r.vr.map(x=>esc(x.f)+' '+x.c+'×').join(', ')+'</small>':'')
+     +(r.ai?'<div><small>AI: '+esc(r.ai.verdict)+(r.ai.used?' · uses “'+esc(r.ai.used)+'”':'')+(r.ai.note?' ('+esc(r.ai.note)+')':'')+'</small></div>':'')
+     +r.cands.map((c,ci)=>'<div class="item" style="flex-wrap:wrap"><span class="t" style="white-space:normal">“'+esc(c.f)+'”'+(c.c&&c.t!='g'?' ×'+c.c:'')+' <small>'+CT[c.t]+(c.cf?' · '+c.cf:'')+'</small></span>'
+       +(c.t!='s'?btn(i,ci,'r','Replace with “'+esc(r.E)+'”','b'):'')+(c.t!='b'?btn(i,ci,'a','Accept as variant'):'')+(c.t=='z'||c.t=='g'?btn(i,ci,'w','Mark as wrong form'):'')+'</div>').join('')
+     +(r.rc?'<div class="diff"><small>Original:</small> …'+r.rc+'…<br><small>Translation, same place:</small> '+r.tc+'</div>':'')
+     +(r.s!='ok'?'<div class="bar" style="margin:6px 0 0">'+btn(i,'','x','Dismiss')+'</div>':'')+'</div>';
+  }).join(''):'<small>'+(M.rows.length?'No problems found.':'Nothing to show.')+'</small>')+'</div>';
+  if(M.unk.length)h+='<div class="card"><b>Names not in the glossary</b> <small>(capitalized names that repeat in the translation; some may be ordinary words)</small>'
+   +M.unk.map((u,i)=>'<div class="item"><span class="t">“'+esc(u.f)+'” <small>×'+u.c+'</small></span><button class="g" data-mu="'+i+'">Add to proposals</button></div>').join('')
+   +'<div class="bar" style="margin-top:8px"><button class="g" data-mu="all">Add all to proposals</button></div></div>';
+  box.innerHTML=h;
+}
+function mfix(map){
+  const ta=$('#mtr');let t=ta.value,c=0;map.forEach(([f,E])=>{t=t.replace(uRe(f,'g',false),()=>{c++;return E})});
+  if(!c)return st('Nothing to replace.');MUNDO.push(ta.value);ta.value=t;mrun();st(c+' replacement(s) made in the translation box. “Revert last fix” undoes it.');
+}
+$('#mgo').onclick=mrun;$('#mflt').onchange=renderMatch;
+$('#mfx').onclick=()=>MR&&mfix(MR.rows.flatMap(r=>r.cands.filter(c=>c.t=='b').map(c=>[c.f,r.E])));
+$('#mfx2').onclick=()=>MR&&mfix(MR.rows.flatMap(r=>r.cands.filter(c=>c.t=='b'||c.t=='z').map(c=>[c.f,r.E])));
+$('#mrev').onclick=()=>{if(!MUNDO.length)return st('Nothing to revert.');$('#mtr').value=MUNDO.pop();mrun()};
+$('#mres').onclick=e=>{
+  const d=e.target.dataset;
+  if(d.mu!==undefined){
+    const L=d.mu=='all'?MR.unk:[MR.unk[+d.mu]];snap('Add names from Match check');
+    const n=addPend(L.map(u=>({t:u.f,tr:u.f})));st(n+' name(s) added to Proposed changes in the Glossary tab.');return;
+  }
+  if(!d.ma)return;
+  const [ri,ci,a]=d.ma.split(':'),r=MR.rows[+ri];if(!r)return;
+  if(a=='x'){MR.rows.splice(+ri,1);renderMatch();return}
+  const c=r.cands[+ci],g=S.gl[r.gi];if(!c)return;
+  if(a=='r')mfix([[c.f,r.E]]);
+  else if(a=='a'){snap('Accept “'+c.f+'” as a form of “'+g.tr+'”');g.v=(g.v?g.v+'; ':'')+c.f;sv();mrun()}
+  else if(a=='w'){snap('Mark “'+c.f+'” as a wrong form of “'+g.tr+'”');g.w=(g.w?g.w+'; ':'')+c.f;sv();mrun()}
+};
+$('#mai').onclick=()=>{
+  if(!MR||!MR.hasR||!MR.hasT)return st('Run the free check first with both texts pasted.');
+  const L=MR.rows.map((r,i)=>[r,i]).filter(([r])=>['mixed','fuzzy','short','other','missing'].includes(r.s)).slice(0,40);
+  if(!L.length)return st('Nothing unclear to check.');
+  aiRun('AI check',async()=>{
+    st('Asking AI how the translation renders '+L.length+' term(s)...');
+    const r=await gem('You compare an original chapter with its English translation and report how glossary terms were translated. Reply with a JSON array only.',
+     'Original:\n'+MR.raw.slice(0,14000)+'\n\nTranslation:\n'+MR.tr.slice(0,14000)+'\n\nTerms (number. original => expected English):\n'+L.map(([r,i])=>i+'. '+S.gl[r.gi].t+' => '+r.E).join('\n')+'\n\nFor each term say how the translation renders it. Format: [{"i":number,"verdict":"ok|different|omitted|pronoun","used":"exact English words used in the translation, or empty","note":"very short"}]',true);
+    jparse(r).forEach(x=>{const row=MR.rows[+x.i];if(!row)return;row.ai={verdict:String(x.verdict||''),used:String(x.used||'').trim(),note:String(x.note||'')};
+      const u=row.ai.used;if(row.ai.verdict=='different'&&u&&u.toLowerCase()!=row.E.toLowerCase()&&!row.cands.some(c=>c.f.toLowerCase()==u.toLowerCase())){row.cands.unshift({f:u,c:0,t:'g',cf:'AI'});if(row.s=='missing')row.s='other'}});
+    renderMatch();
+  });
+};
+$('#mpr').onclick=e=>{const L=(MR?MR.rows:[]).filter(r=>r.k).map(r=>S.gl[r.gi]);if(!L.length)return st('Run the check with an original text first.');copyText('Use this glossary. Keep these exact English names, use the gender given for pronouns and follow the address rules:\n'+glLines(L,MR.n),e.currentTarget)};
+function renderMatchSel(){$('#mch').innerHTML='<option value="">Choose a chapter</option>'+S.ch.map((c,i)=>'<option value="'+i+'">'+(i+1)+'. '+esc(c.title)+'</option>').join('')}
+$('#mld').onclick=()=>{const i=$('#mch').value;if(i==='')return st('Choose a chapter first.');const c=S.ch[+i];$('#mraw').value=c.src||'';$('#mtr').value=c.out||'';$('#mnum').value=+i+1;MUNDO=[];MR=null;renderMatch()};
+$('#msv').onclick=()=>{
+  const i=$('#mch').value;if(i==='')return st('Choose a chapter first.');const c=S.ch[+i],t=$('#mtr').value.trim();if(!c||!t)return;
+  snap('Save from Match check to chapter '+(+i+1),{gl:false,ch:[+i]});c.out=t;c.done=true;if(!c.src&&$('#mraw').value.trim())c.src=$('#mraw').value.trim();sv();renderCh();st('Saved to chapter '+(+i+1)+'.');
+};
+$('#nov').addEventListener('change',()=>{MR=null;MUNDO=[];renderMatch();renderMatchSel()});
+
+/* chapter health scan: status counts + leftover / paragraph / short checks */
+$('#hscan').onclick=async()=>{
+ const o=$('#hout'),cj=new RegExp('['+CJ+']','g'),rows=[],cnt={raw:0,pre:0,tr:0};
+ const rs=S.ch.filter(c=>c.done&&c.src&&c.out).map(c=>c.out.length/c.src.length).sort((a,b)=>a-b),med=rs.length>=3?rs[rs.length>>1]:0;
+ S.ch.forEach((c,i)=>{
+  if(!c.done){c.scanned?cnt.pre++:cnt.raw++;return}
+  cnt.tr++;const p=[],out=c.out||'';
+  if(!out.trim())p.push('empty translation');
+  const lf=(out.match(cj)||[]).length;if(lf)p.push(lf+' leftover CJK character'+(lf>1?'s':''));
+  if(c.src&&out.trim()){
+   const a=c.src.split(/\n+/).filter(x=>x.trim()).length,b=out.split(/\n+/).filter(x=>x.trim()).length;
+   if(a>3&&Math.abs(a-b)/Math.max(a,b)>.25)p.push('paragraphs '+a+' to '+b);
+   if(med&&out.length/c.src.length<med*.6)p.push('very short ('+Math.round(out.length/c.src.length/med*100)+'% of typical length)');
+  }
+  if(p.length)rows.push([i,p]);
+ });
+ let sto='';try{const e=await navigator.storage.estimate();sto=' · Storage used: '+(e.usage/1048576).toFixed(1)+' MB'}catch(x){}
+ o.innerHTML='<div class="tag">'+S.ch.length+' chapters · '+cnt.tr+' translated · '+cnt.pre+' pre-scanned · '+cnt.raw+' not translated · <b class="'+(rows.length?'warn':'')+'">'+rows.length+' with problems</b>'+sto+'</div>'+
+  rows.slice(0,200).map(([i,p])=>'<div class="item"><span class="tag">'+(i+1)+'</span><span class="t">'+esc(S.ch[i].title)+'</span><span class="tag warn">'+esc(p.join(' · '))+'</span><button class="g" data-hr="'+i+'">Open</button></div>').join('')+
+  (rows.length?'':'<div class="tag ok" style="margin-top:6px">No problems found.</div>');
+ o.querySelectorAll('[data-hr]').forEach(b=>b.onclick=()=>openRead(+b.dataset.hr));
+};
+
+useNovel(R.cur);if(BOOT.msg)st(BOOT.msg);try{chkBk()}catch(e){}
+</script>
+<script>
+window.BOOT={db:null,R:null,set:null,hist:{},migrate:false,msg:''};
+window.DBX={R:null,C:null,t:0,cache:{},
+ queue(R,C){this.R=R;this.C=C;clearTimeout(this.t);this.t=setTimeout(()=>this.flush(),500)},
+ fail(){this.cache={};try{st('Save to IndexedDB failed. Download a backup now.')}catch(e){}},
+ flush(){clearTimeout(this.t);const R=this.R,C=this.C,db=BOOT.db;if(!R||!db)return;
+  let tx;try{tx=db.transaction(['kv','ch'],'readwrite')}catch(e){return this.fail()}
+  const kv=tx.objectStore('kv'),ch=tx.objectStore('ch'),ca=this.cache,want=new Set();
+  const P=(o,k,v,ck)=>{want.add(ck);if(ca[ck]!==v){o.put(v,k);ca[ck]=v}};
+  P(kv,'meta',JSON.stringify({cur:R.cur,novels:R.novels.map(n=>({id:n.id,name:n.name,gl:n.gl,pend:n.pend,n:n.ch.length}))}),'m');
+  P(kv,'set',JSON.stringify(C),'s');
+  R.novels.forEach(n=>n.ch.forEach((c,i)=>{const k=n.id+'|'+String(i).padStart(6,'0');P(ch,k,JSON.stringify(c),'c'+k)}));
+  for(const ck in ca)if(!want.has(ck)){if(ck[0]=='c')ch.delete(ck.slice(1));delete ca[ck]}
+  tx.onerror=tx.onabort=()=>this.fail();
+  tx.oncomplete=()=>{if(!BOOT.migrate)return;const n=R.novels.reduce((a,x)=>a+x.ch.length,0),t=db.transaction(['kv','ch'],'readwrite'),q=t.objectStore('ch').count();
+   q.onsuccess=()=>{if(q.result===n){BOOT.migrate=false;t.objectStore('kv').put(Date.now(),'mig');try{st('Moved to IndexedDB: '+n+' chapters verified. Old browser copy kept as backup.')}catch(e){}}
+    else try{st('Migration check failed ('+q.result+'/'+n+'). Old data kept safe.')}catch(e){}}}},
+ hist(id,s){const db=BOOT.db;if(!db){try{localStorage.setItem('nt_h_'+id,s)}catch(e){}return}try{db.transaction('kv','readwrite').objectStore('kv').put(s,'h:'+id)}catch(e){}},
+ delHist(id){const db=BOOT.db;if(!db){try{localStorage.removeItem('nt_h_'+id)}catch(e){}return}try{db.transaction('kv','readwrite').objectStore('kv').delete('h:'+id)}catch(e){}}
+};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)DBX.flush()});
+addEventListener('pagehide',()=>DBX.flush());
+(async()=>{
+ const lj=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+ const fromLS=()=>{BOOT.R=lj('nt_state');BOOT.set=lj('nt_set');const r=BOOT.R;const ids=r&&Array.isArray(r.novels)?r.novels.map(n=>n.id):['n1'];ids.forEach(id=>{const h=lj('nt_h_'+id);if(h)BOOT.hist[id]=h})};
+ try{
+  try{navigator.storage.persist()}catch(e){}
+  const db=await new Promise((ok,no)=>{const q=indexedDB.open('lorekeeper',1);q.onupgradeneeded=()=>{q.result.createObjectStore('kv');q.result.createObjectStore('ch')};q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)});
+  const g=(s,k)=>new Promise(r=>{const q=db.transaction(s).objectStore(s).get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(undefined)});
+  const all=(s,m,rg)=>new Promise(r=>{const q=db.transaction(s).objectStore(s)[m](rg);q.onsuccess=()=>r(q.result);q.onerror=()=>r([])});
+  const mig=await g('kv','mig'),metaS=mig?await g('kv','meta'):null;
+  if(mig&&metaS){
+   const meta=JSON.parse(metaS),setS=await g('kv','set'),ks=await all('ch','getAllKeys'),vs=await all('ch','getAll'),by={};
+   ks.forEach((k,i)=>{DBX.cache['c'+k]=vs[i];(by[k.split('|')[0]]=by[k.split('|')[0]]||[]).push(JSON.parse(vs[i]))});
+   DBX.cache.m=metaS;if(setS){DBX.cache.s=setS;BOOT.set=JSON.parse(setS)}
+   BOOT.R={cur:meta.cur,novels:meta.novels.map(n=>({id:n.id,name:n.name,gl:n.gl,pend:n.pend,ch:by[n.id]||[]}))};
+   const hk=await all('kv','getAllKeys',IDBKeyRange.bound('h:','h:\uffff')),hv=await all('kv','getAll',IDBKeyRange.bound('h:','h:\uffff'));
+   hk.forEach((k,i)=>{try{BOOT.hist[k.slice(2)]=JSON.parse(hv[i])}catch(e){}});
+   BOOT.db=db;BOOT.msg='Storage: IndexedDB.';
+  }else{
+   fromLS();BOOT.db=db;BOOT.migrate=!!BOOT.R;
+   Object.keys(BOOT.hist).forEach(id=>DBX.hist(id,JSON.stringify(BOOT.hist[id])));
+   BOOT.msg=BOOT.R?'Migrating your data to IndexedDB...':'Storage: IndexedDB.';
+  }
+ }catch(e){BOOT.db=null;fromLS();BOOT.msg='IndexedDB unavailable, using browser storage (limited).'}
+ const sc=document.createElement('script');sc.textContent=document.getElementById('app').textContent;document.body.appendChild(sc);
+})();
+</script></body></html>
