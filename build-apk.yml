@@ -21,7 +21,7 @@ jobs:
         run: npm install
       - name: Prepare web files (bundle JSZip and XLSX so the app works offline)
         run: |
-          rm -rf www && mkdir www && cp -r web/* www/
+          rm -rf www && mkdir www && cp index.html manifest.json sw.js icon-192.png icon-512.png icon-maskable-512.png www/
           cp node_modules/jszip/dist/jszip.min.js www/
           cp node_modules/xlsx/dist/xlsx.full.min.js www/
           sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js#jszip.min.js#; s#https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js#xlsx.full.min.js#' www/index.html
@@ -33,9 +33,9 @@ jobs:
           R=android/app/src/main/res
           rm -rf $R/mipmap-anydpi-v26
           for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            cp web/icon-192.png $R/mipmap-$d/ic_launcher.png
-            cp web/icon-192.png $R/mipmap-$d/ic_launcher_round.png
-            cp web/icon-192.png $R/mipmap-$d/ic_launcher_foreground.png
+            cp icon-192.png $R/mipmap-$d/ic_launcher.png
+            cp icon-192.png $R/mipmap-$d/ic_launcher_round.png
+            cp icon-192.png $R/mipmap-$d/ic_launcher_foreground.png
           done
       - name: Sync web files into the app
         run: npx cap sync android
